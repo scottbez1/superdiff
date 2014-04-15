@@ -1,0 +1,27 @@
+package com.scottbezek.util;
+
+public class Assert {
+
+    public static void isNull(Object o) {
+        if (o != null) {
+            throw new AssertionError("Expected null: " + o);
+        }
+    }
+
+    public static void notNull(Object o) {
+        if (o == null) {
+            throw new AssertionError("Expected non-null");
+        }
+    }
+
+    public static void isFalse(boolean val) {
+        if (val != false) {
+            throw new AssertionError("Expected false");
+        }
+    }
+
+    public static RuntimeException fail(String message) {
+        throw new AssertionError(message);
+    }
+
+}

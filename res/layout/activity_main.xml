@@ -1,0 +1,22 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ListViewActivity" >
+    <HorizontalScrollView 
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+        <FrameLayout 
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+		 <ListView
+		     android:id="@+id/content_view"
+		     android:layout_width="1000dp"
+		     android:layout_height="match_parent"
+		     android:fastScrollEnabled="true"
+		     android:dividerHeight="0dp"
+             android:divider="@null"
+		     />
+        </FrameLayout>
+    </HorizontalScrollView>
+</FrameLayout>
