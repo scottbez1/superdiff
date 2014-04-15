@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ListView;
 
+import com.scottbezek.superdiff.list.SideBySideLineAdapter;
 import com.scottbezek.superdiff.unified.Chunk;
 import com.scottbezek.superdiff.unified.ILineReader;
 import com.scottbezek.superdiff.unified.Parser;
@@ -97,7 +98,7 @@ public class ListViewActivity extends Activity {
         LayoutParams lp = listView.getLayoutParams();
         lp.width = 1000;
         listView.setLayoutParams(lp);
-        listView.setAdapter(new SideBySideLineAdapter(getLayoutInflater(), fullDiff));
+        listView.setAdapter(new SideBySideLineAdapter(this, fullDiff));
     }
 
 

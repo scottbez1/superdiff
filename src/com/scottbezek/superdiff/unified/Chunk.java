@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 import com.scottbezek.superdiff.unified.Chunk.Block.Delta;
 import com.scottbezek.superdiff.unified.Chunk.Block.Unchanged;
 import com.scottbezek.util.Assert;
 
+@Immutable
 public class Chunk implements IForwardApplicable {
 
     private final int mLeftStartLine;
@@ -150,7 +152,7 @@ public class Chunk implements IForwardApplicable {
 
     public interface Block extends IForwardApplicable {
 
-
+        @Immutable
         public static class Unchanged implements Block {
 
             private final int mLeftStartLine;
@@ -201,6 +203,7 @@ public class Chunk implements IForwardApplicable {
             }
         }
 
+        @Immutable
         public static class Delta implements Block {
 
             private final int mLeftStartLine;
