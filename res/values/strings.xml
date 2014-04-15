@@ -4,4 +4,8 @@
     <string name="app_name">SuperDiff</string>
     <string name="title_activity_list_view">ListViewActivity</string>
 
+    <plurals name="collapsed_lines">
+        <item quantity="one">%d line</item>
+        <item quantity="other">%d lines</item>
+    </plurals>
 </resources>

@@ -20,6 +20,12 @@ public class Assert {
         }
     }
 
+    public static void isTrue(boolean val) {
+        if (val != true) {
+            throw new AssertionError("Expected true");
+        }
+    }
+
     public static RuntimeException fail(String message) {
         throw new AssertionError(message);
     }

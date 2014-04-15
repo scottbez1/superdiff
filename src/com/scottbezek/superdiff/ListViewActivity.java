@@ -1,6 +1,7 @@
 package com.scottbezek.superdiff;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,7 +13,9 @@ import android.view.Menu;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ListView;
 
-import com.scottbezek.superdiff.list.SideBySideLineAdapter;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.Collapsed;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
 import com.scottbezek.superdiff.unified.Chunk;
 import com.scottbezek.superdiff.unified.ILineReader;
 import com.scottbezek.superdiff.unified.Parser;
@@ -98,7 +101,14 @@ public class ListViewActivity extends Activity {
         LayoutParams lp = listView.getLayoutParams();
         lp.width = 1000;
         listView.setLayoutParams(lp);
-        listView.setAdapter(new SideBySideLineAdapter(this, fullDiff));
+
+        List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
+        items.add(CollapsedOrLine.of(new Collapsed(Collections.<SideBySideLine>emptyList())));
+        items.add(CollapsedOrLine.of(new Collapsed(Collections.<SideBySideLine>emptyList())));
+        for (SideBySideLine line : fullDiff) {
+            items.add(CollapsedOrLine.of(line));
+        }
+        listView.setAdapter(new CollapsedSideBySideLineAdapter(items));
     }
 
 

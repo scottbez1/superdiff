@@ -2,7 +2,6 @@ package com.scottbezek.superdiff.list;
 
 import java.util.List;
 
-import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -11,11 +10,9 @@ import com.scottbezek.superdiff.unified.SideBySideLine;
 
 public class SideBySideLineAdapter extends BaseAdapter {
 
-    private final Context mContext;
     private final List<SideBySideLine> mLines;
 
-    public SideBySideLineAdapter(Context context, List<SideBySideLine> lines) {
-        mContext = context;
+    public SideBySideLineAdapter(List<SideBySideLine> lines) {
         mLines = lines;
     }
 
@@ -38,7 +35,7 @@ public class SideBySideLineAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         final SideBySideLineView view;
         if (convertView == null) {
-            view = new SideBySideLineView(mContext);
+            view = new SideBySideLineView(parent.getContext());
         } else {
             view = (SideBySideLineView)convertView;
         }
