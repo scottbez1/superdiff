@@ -6,8 +6,9 @@ import java.util.List;
 
 public class SingleFileDiff {
 
-    private final String mLeftFilename;
-    private final String mRightFilename;
+    @SuppressWarnings("unused") // TODO(sbezek): these should maybe be moved elsewhere?
+    private final String mLeftFilename, mRightFilename;
+
     private final List<Chunk> mChunks;
 
     public SingleFileDiff(String leftFilename, String rightFilename, List<Chunk> chunks) {
