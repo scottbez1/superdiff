@@ -1,5 +1,7 @@
 package com.scottbezek.superdiff.list;
 
+import javax.annotation.concurrent.Immutable;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.widget.LinearLayout;
@@ -16,9 +18,21 @@ public class SideBySideLineView extends LinearLayout {
     private final int mRemovedBackgroundColor;
     private final int mAddedBackgroundColor;
 
+    private final TextView mLeftLineNumber;
+    private final TextView mLeftContents;
+    private final TextView mRightLineNumber;
+    private final TextView mRightContents;
+
     public SideBySideLineView(Context context) {
         super(context);
-        inflate();
+
+        setOrientation(LinearLayout.HORIZONTAL);
+        inflate(getContext(), R.layout.side_by_side_line_item, this);
+
+        mLeftLineNumber = (TextView)findViewById(R.id.left_line_number);
+        mLeftContents = (TextView)findViewById(R.id.left_line_contents);
+        mRightLineNumber = (TextView)findViewById(R.id.right_line_number);
+        mRightContents = (TextView)findViewById(R.id.right_line_contents);
 
         final Resources resources = context.getResources();
         mNormalBackgroundColor = resources.getColor(R.color.diff_line_normal_background);
@@ -27,32 +41,21 @@ public class SideBySideLineView extends LinearLayout {
         mAddedBackgroundColor = resources.getColor(R.color.diff_line_added_background);
     }
 
-    private void inflate() {
-        setOrientation(LinearLayout.HORIZONTAL);
-        inflate(getContext(), R.layout.side_by_side_line_item, this);
-    }
-
     public void setLine(SideBySideLine line) {
-        final TextView leftLineNumber = (TextView)findViewById(R.id.left_line_number);
-        final TextView leftContents = (TextView)findViewById(R.id.left_line_contents);
-
         if (line.hasLeft()) {
-            leftLineNumber.setText(String.valueOf(line.getLeftLineNumber()));
-            leftContents.setText(line.getLeftLine());
+            mLeftLineNumber.setText(String.valueOf(line.getLeftLineNumber()));
+            mLeftContents.setText(line.getLeftLine());
         } else {
-            leftLineNumber.setText("");
-            leftContents.setText("");
+            mLeftLineNumber.setText("");
+            mLeftContents.setText("");
         }
 
-        final TextView rightLineNumber = (TextView)findViewById(R.id.right_line_number);
-        final TextView rightContents = (TextView)findViewById(R.id.right_line_contents);
-
         if (line.hasRight()) {
-            rightLineNumber.setText(String.valueOf(line.getRightLineNumber()));
-            rightContents.setText(line.getRightLine());
+            mRightLineNumber.setText(String.valueOf(line.getRightLineNumber()));
+            mRightContents.setText(line.getRightLine());
         } else {
-            rightLineNumber.setText("");
-            rightContents.setText("");
+            mRightLineNumber.setText("");
+            mRightContents.setText("");
         }
 
         final int leftBackgroundColor;
@@ -77,7 +80,47 @@ public class SideBySideLineView extends LinearLayout {
             throw Assert.fail("diff line has neither left nor right");
         }
 
-        leftContents.setBackgroundColor(leftBackgroundColor);
-        rightContents.setBackgroundColor(rightBackgroundColor);
+        mLeftContents.setBackgroundColor(leftBackgroundColor);
+        mRightContents.setBackgroundColor(rightBackgroundColor);
+    }
+
+    public void setItemWidths(ItemWidths widths) {
+        android.view.ViewGroup.LayoutParams lp;
+
+        lp = mLeftLineNumber.getLayoutParams();
+        lp.width = widths.getLineNumberWidthPx();
+        mLeftLineNumber.setLayoutParams(lp);
+
+        lp = mRightLineNumber.getLayoutParams();
+        lp.width = widths.getLineNumberWidthPx();
+        mRightLineNumber.setLayoutParams(lp);
+
+
+        lp = mLeftContents.getLayoutParams();
+        lp.width = widths.getLineContentsWidthPx();
+        mLeftContents.setLayoutParams(lp);
+
+        lp = mRightContents.getLayoutParams();
+        lp.width = widths.getLineContentsWidthPx();
+        mRightContents.setLayoutParams(lp);
+    }
+
+    @Immutable
+    public static class ItemWidths {
+        private final int mLineNumberWidthPx;
+        private final int mLineContentsWidthPx;
+
+        public ItemWidths(int lineNumberWidthPx, int lineContentsWidthPx) {
+            mLineNumberWidthPx = lineNumberWidthPx;
+            mLineContentsWidthPx = lineContentsWidthPx;
+        }
+
+        public int getLineNumberWidthPx() {
+            return mLineNumberWidthPx;
+        }
+
+        public int getLineContentsWidthPx() {
+            return mLineContentsWidthPx;
+        }
     }
 }

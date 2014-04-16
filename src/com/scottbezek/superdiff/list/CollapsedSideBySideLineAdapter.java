@@ -12,15 +12,18 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.scottbezek.superdiff.R;
+import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.SideBySideLine;
 import com.scottbezek.util.Assert;
 
 public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
     private final List<CollapsedOrLine> mItems;
+    private final ItemWidths mItemWidthInfo;
 
-    public CollapsedSideBySideLineAdapter(List<CollapsedOrLine> items) {
+    public CollapsedSideBySideLineAdapter(List<CollapsedOrLine> items, ItemWidths itemWidthInfo) {
         mItems = items;
+        mItemWidthInfo = itemWidthInfo;
     }
 
     @Override
@@ -52,6 +55,7 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
         final SideBySideLineView view;
         if (convertView == null) {
             view = new SideBySideLineView(parent.getContext());
+            view.setItemWidths(mItemWidthInfo);
         } else {
             view = (SideBySideLineView)convertView;
         }
@@ -90,7 +94,7 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
     }
 
     /**
-     * A collpased set of {@link SideBySideLine}s, to be represented as a single
+     * A collapsed set of {@link SideBySideLine}s, to be represented as a single
      * small row in the diff view.
      */
     public static class Collapsed {

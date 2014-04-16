@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import android.app.Activity;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -15,11 +17,13 @@ import android.widget.ListView;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.Collapsed;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
+import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.Chunk;
 import com.scottbezek.superdiff.unified.ILineReader;
 import com.scottbezek.superdiff.unified.Parser;
 import com.scottbezek.superdiff.unified.SideBySideLine;
 import com.scottbezek.superdiff.unified.SingleFileDiff;
+import com.scottbezek.util.Assert;
 
 public class ListViewActivity extends Activity {
 
@@ -31,12 +35,17 @@ public class ListViewActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         ListView listView = (ListView)findViewById(R.id.content_view);
-        LayoutParams lp = listView.getLayoutParams();
-        lp.width = 1000;
-        listView.setLayoutParams(lp);
-        listView.setAdapter(new CollapsedSideBySideLineAdapter(getDiff()));
-    }
 
+        List<CollapsedOrLine> diff = getDiff();
+        ItemWidths itemWidthInfo = calculateItemWidths(diff);
+
+        LayoutParams lp = listView.getLayoutParams();
+        // TODO(sbezek): this is kind of lame and ignores things like margins, padding, etc.
+        lp.width = itemWidthInfo.getLineContentsWidthPx() * 2 + itemWidthInfo.getLineNumberWidthPx() * 2;
+        listView.setLayoutParams(lp);
+
+        listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo));
+    }
 
     private List<CollapsedOrLine> getDiff() {
         long startRead = SystemClock.elapsedRealtime();
@@ -99,17 +108,57 @@ public class ListViewActivity extends Activity {
         return items;
     }
 
+    private ItemWidths calculateItemWidths(List<CollapsedOrLine> diff) {
+        Paint p = new Paint();
+        p.setTextSize(getResources().getDimension(R.dimen.code_text_size));
+        p.setTypeface(Typeface.MONOSPACE);
+
+        // Because we're using a monospace font, cheat by finding widest line (#
+        // of characters) and just measuring that once.
+        // TODO(sbezek): XXX what about unicode? this is almost certainly completely flawed, though it might be possible to use a BreakIterator.getCharacterInstance()?
+        int widestLineNumberChars = 2;
+        int widestContentsChars = 20;
+        for (CollapsedOrLine item : diff) {
+            if (item.isCollapsed()) {
+                continue;
+            } else {
+                SideBySideLine line = item.getLine();
+                if (line.hasLeft()) {
+                    widestLineNumberChars = Math.max(widestLineNumberChars,
+                            String.valueOf(line.getLeftLineNumber()).length());
+                    widestContentsChars = Math.max(widestContentsChars, line.getLeftLine().length());
+                }
+                if (line.hasRight()) {
+                    widestLineNumberChars = Math.max(widestLineNumberChars,
+                            String.valueOf(line.getRightLineNumber()).length());
+                    widestContentsChars = Math.max(widestContentsChars, line.getRightLine().length());
+                }
+            }
+        }
+
+        return new ItemWidths(
+                getWidthOfNCharacters(p, widestLineNumberChars),
+                getWidthOfNCharacters(p, widestContentsChars));
+    }
+
+    private int getWidthOfNCharacters(Paint p, int numChars) {
+        // Only is valid for monospaced fonts
+        Assert.isTrue(p.getTypeface() == Typeface.MONOSPACE);
+
+        StringBuilder dummy = new StringBuilder();
+        for (int i = 0; i < numChars; i++) {
+            dummy.append("A");
+        }
+        return (int)p.measureText(dummy.toString());
+    }
+
 //  for (Chunk c : d.getAllChunks()) {
 //      fooReader.moveToLine(c.getLeftStartLine()-1);
 //      c.applyForward(fooReader, fooWriter);
 //  }
 
 //
-//  Paint p = new Paint();
-//  p.setTextSize(getResources().getDimension(R.dimen.code_text_size));
-//  p.setTypeface(Typeface.MONOSPACE);
 //
-//  // Because we're using a monospace font, cheat by finding widest (characters) line and just measuring that once.
 //  int widest = 0;
 //  String widestText = "";
 //  for (String line : lines) {
