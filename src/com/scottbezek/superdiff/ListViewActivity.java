@@ -1,7 +1,6 @@
 package com.scottbezek.superdiff;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,9 +30,15 @@ public class ListViewActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // TODO(sbezek): don't load on the UI thread. use a loader or something.
         ListView listView = (ListView)findViewById(R.id.content_view);
+        LayoutParams lp = listView.getLayoutParams();
+        lp.width = 1000;
+        listView.setLayoutParams(lp);
+        listView.setAdapter(new CollapsedSideBySideLineAdapter(getDiff()));
+    }
 
+
+    private List<CollapsedOrLine> getDiff() {
         long startRead = SystemClock.elapsedRealtime();
         final String[] lines = DummyContent.readLines(getResources(), R.raw.sample_view_before);
         Log.d(TAG, "Read " + lines.length + "lines in " + (SystemClock.elapsedRealtime() - startRead) + "ms");
@@ -41,26 +46,38 @@ public class ListViewActivity extends Activity {
         Parser parser = new Parser(System.out);
         SingleFileDiff d = parser.parse(DummyContent.getScanner(getResources(), R.raw.sample_view_diff));
 
-        ILineReader fooReader = new ArrayReader(lines);
 
         long startApply = SystemClock.elapsedRealtime();
 
+        List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
+        List<SideBySideLine> currentCollapse = null;
+
+        ILineReader fooReader = new ArrayReader(lines);
         Iterator<Chunk> chunkIter = d.getChunks().iterator();
         Chunk nextChunk = chunkIter.hasNext() ? chunkIter.next() : null;
 
-        List<SideBySideLine> fullDiff = new ArrayList<SideBySideLine>();
         int leftLine = 1;
         int rightLine = 1;
         while (leftLine <= lines.length) {
             if (nextChunk == null || leftLine < nextChunk.getLeftStartLine()) {
                 // No relevant chunk for this line, so just output the current line
                 String line = fooReader.consumeLine();
-                fullDiff.add(new SideBySideLine(leftLine, line, rightLine, line));
+                final SideBySideLine diffLine = new SideBySideLine(leftLine, line, rightLine, line);
                 leftLine++;
                 rightLine++;
+
+                if (currentCollapse == null) {
+                    currentCollapse = new ArrayList<SideBySideLine>();
+                }
+                currentCollapse.add(diffLine);
             } else {
+                if (currentCollapse != null) {
+                    items.add(CollapsedOrLine.of(new Collapsed(currentCollapse)));
+                    currentCollapse = null;
+                }
+
                 for (SideBySideLine line : nextChunk.applyForward(fooReader)) {
-                    fullDiff.add(line);
+                    items.add(CollapsedOrLine.of(line));
                     if (line.hasLeft()) {
                         leftLine++;
                     }
@@ -72,49 +89,43 @@ public class ListViewActivity extends Activity {
             }
         }
 
+        if (currentCollapse != null) {
+            items.add(CollapsedOrLine.of(new Collapsed(currentCollapse)));
+            currentCollapse = null;
+        }
+
         Log.d(TAG, "Applied diff in " + (SystemClock.elapsedRealtime() - startApply) + "ms");
 
-//        for (Chunk c : d.getAllChunks()) {
-//            fooReader.moveToLine(c.getLeftStartLine()-1);
-//            c.applyForward(fooReader, fooWriter);
-//        }
-
-//
-//        Paint p = new Paint();
-//        p.setTextSize(getResources().getDimension(R.dimen.code_text_size));
-//        p.setTypeface(Typeface.MONOSPACE);
-//
-//        // Because we're using a monospace font, cheat by finding widest (characters) line and just measuring that once.
-//        int widest = 0;
-//        String widestText = "";
-//        for (String line : lines) {
-//            if (line.length() > widest) {
-//                widest = line.length();
-//                widestText = line;
-//            }
-//        }
-//        // TODO also account for other things in the item (e.g line number)
-//        LayoutParams lp = listView.getLayoutParams();
-//        lp.width = (int)p.measureText(widestText);
-//        listView.setLayoutParams(lp);
-
-        LayoutParams lp = listView.getLayoutParams();
-        lp.width = 1000;
-        listView.setLayoutParams(lp);
-
-        List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
-        items.add(CollapsedOrLine.of(new Collapsed(Collections.<SideBySideLine>emptyList())));
-        items.add(CollapsedOrLine.of(new Collapsed(Collections.<SideBySideLine>emptyList())));
-        for (SideBySideLine line : fullDiff) {
-            items.add(CollapsedOrLine.of(line));
-        }
-        listView.setAdapter(new CollapsedSideBySideLineAdapter(items));
+        return items;
     }
 
+//  for (Chunk c : d.getAllChunks()) {
+//      fooReader.moveToLine(c.getLeftStartLine()-1);
+//      c.applyForward(fooReader, fooWriter);
+//  }
+
+//
+//  Paint p = new Paint();
+//  p.setTextSize(getResources().getDimension(R.dimen.code_text_size));
+//  p.setTypeface(Typeface.MONOSPACE);
+//
+//  // Because we're using a monospace font, cheat by finding widest (characters) line and just measuring that once.
+//  int widest = 0;
+//  String widestText = "";
+//  for (String line : lines) {
+//      if (line.length() > widest) {
+//          widest = line.length();
+//          widestText = line;
+//      }
+//  }
+//  // TODO also account for other things in the item (e.g line number)
+//  LayoutParams lp = listView.getLayoutParams();
+//  lp.width = (int)p.measureText(widestText);
+//  listView.setLayoutParams(lp);
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        return true;
+        return false;
     }
 
     private static class ArrayReader implements ILineReader {
