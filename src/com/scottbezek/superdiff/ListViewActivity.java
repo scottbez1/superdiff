@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ListView;
 
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
@@ -39,10 +38,10 @@ public class ListViewActivity extends Activity {
         List<CollapsedOrLine> diff = getDiff();
         ItemWidths itemWidthInfo = calculateItemWidths(diff);
 
-        LayoutParams lp = listView.getLayoutParams();
-        // TODO(sbezek): this is kind of lame and ignores things like margins, padding, etc.
-        lp.width = itemWidthInfo.getLineContentsWidthPx() * 2 + itemWidthInfo.getLineNumberWidthPx() * 2;
-        listView.setLayoutParams(lp);
+//        LayoutParams lp = listView.getLayoutParams();
+//        // TODO(sbezek): this is kind of lame and ignores things like margins, padding, etc.
+//        lp.width = itemWidthInfo.getLineContentsWidthPx() * 2 + itemWidthInfo.getLineNumberWidthPx() * 2;
+//        listView.setLayoutParams(lp);
 
         listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo));
     }
