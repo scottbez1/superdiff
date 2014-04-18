@@ -18,15 +18,15 @@
         />
     
     <TextView
-        android:id="@+id/right_line_contents"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        style="@style/DiffLine"
-        />
-    <TextView
         android:id="@+id/right_line_number"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         style="@style/DiffLineNumber"
+        />
+    <TextView
+        android:id="@+id/right_line_contents"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        style="@style/DiffLine"
         />
 </merge>

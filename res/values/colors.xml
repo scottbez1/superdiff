@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <color name="diff_line_normal_background">#ffffff</color>
-    <color name="diff_line_empty_background">#cccccc</color>
-    <color name="diff_line_removed_background">#ff0000</color>
-    <color name="diff_line_added_background">#00ff00</color>
+    <color name="collapsed_background">#171812</color>
+    <color name="collapsed_foreground">#d1d4cf</color>
+    
+    <color name="diff_foreground">#D8E3CC</color>
+    <color name="diff_line_normal_background">#272822</color>
+    <color name="diff_line_empty_background">#272822</color>
+    
+    <color name="diff_line_removed_background">#46322D</color>
+    <color name="diff_line_added_background">#2C3A28</color>
+    
+    <color name="diff_chars_removed_background">#5F322D</color>
+    <color name="diff_chars_added_background">#274A2C</color>
+    
+    <color name="diff_line_number_background">#49483E</color>
+    <color name="diff_line_number_foreground">#d1d4cf</color>
     
 </resources>

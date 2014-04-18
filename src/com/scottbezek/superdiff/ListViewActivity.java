@@ -87,10 +87,10 @@ public class ListViewActivity extends Activity {
 
                 for (SideBySideLine line : nextChunk.applyForward(fooReader)) {
                     items.add(CollapsedOrLine.of(line));
-                    if (line.hasLeft()) {
+                    if (line.getLeftLine() != null) {
                         leftLine++;
                     }
-                    if (line.hasRight()) {
+                    if (line.getRightLine() != null) {
                         rightLine++;
                     }
                 }
@@ -123,15 +123,17 @@ public class ListViewActivity extends Activity {
                 continue;
             } else {
                 SideBySideLine line = item.getLine();
-                if (line.hasLeft()) {
+                final String leftLine = line.getLeftLine();
+                if (leftLine != null) {
                     widestLineNumberChars = Math.max(widestLineNumberChars,
                             String.valueOf(line.getLeftLineNumber()).length());
-                    widestContentsChars = Math.max(widestContentsChars, line.getLeftLine().length());
+                    widestContentsChars = Math.max(widestContentsChars, leftLine.length());
                 }
-                if (line.hasRight()) {
+                final String rightLine = line.getRightLine();
+                if (rightLine != null) {
                     widestLineNumberChars = Math.max(widestLineNumberChars,
                             String.valueOf(line.getRightLineNumber()).length());
-                    widestContentsChars = Math.max(widestContentsChars, line.getRightLine().length());
+                    widestContentsChars = Math.max(widestContentsChars, rightLine.length());
                 }
             }
         }

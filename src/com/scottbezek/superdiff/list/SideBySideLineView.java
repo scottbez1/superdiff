@@ -42,17 +42,19 @@ public class SideBySideLineView extends LinearLayout {
     }
 
     public void setLine(SideBySideLine line) {
-        if (line.hasLeft()) {
+        String leftLine = line.getLeftLine();
+        String rightLine = line.getRightLine();
+        if (leftLine != null) {
             mLeftLineNumber.setText(String.valueOf(line.getLeftLineNumber()));
-            mLeftContents.setText(line.getLeftLine());
+            mLeftContents.setText(leftLine);
         } else {
             mLeftLineNumber.setText("");
             mLeftContents.setText("");
         }
 
-        if (line.hasRight()) {
+        if (rightLine != null) {
             mRightLineNumber.setText(String.valueOf(line.getRightLineNumber()));
-            mRightContents.setText(line.getRightLine());
+            mRightContents.setText(rightLine);
         } else {
             mRightLineNumber.setText("");
             mRightContents.setText("");
@@ -60,16 +62,16 @@ public class SideBySideLineView extends LinearLayout {
 
         final int leftBackgroundColor;
         final int rightBackgroundColor;
-        if (line.hasLeft() && line.hasRight()) {
-            if (line.getLeftLine().equals(line.getRightLine())) {
+        if (leftLine != null && rightLine != null) {
+            if (leftLine.equals(rightLine)) {
                 leftBackgroundColor = mNormalBackgroundColor;
                 rightBackgroundColor = mNormalBackgroundColor;
             } else {
                 leftBackgroundColor = mRemovedBackgroundColor;
                 rightBackgroundColor = mAddedBackgroundColor;
             }
-        } else if (line.hasLeft() ^ line.hasRight()){
-            if (line.hasLeft()) {
+        } else if ((leftLine == null) ^ (rightLine == null)){
+            if (leftLine != null) {
                 leftBackgroundColor = mRemovedBackgroundColor;
                 rightBackgroundColor = mEmptyBackgroundColor;
             } else {

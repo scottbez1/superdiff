@@ -84,6 +84,7 @@ public class Chunk implements IForwardApplicable {
             }
         }
 
+        @SuppressWarnings("null")
         @Nonnull
         private Unchanged.Builder prepareUnchangedBuilder() {
             // Finish the delta block if we were building one
@@ -109,6 +110,7 @@ public class Chunk implements IForwardApplicable {
             }
         }
 
+        @SuppressWarnings("null")
         @Nonnull
         private Delta.Builder prepareDeltaBuilder() {
             // Finish the unchanged block if we were building one
@@ -271,10 +273,10 @@ public class Chunk implements IForwardApplicable {
                     SideBySideLine line = new SideBySideLine(leftLine, expectedRemovedLine, rightLine, addedLine);
                     output.add(line);
 
-                    if (line.hasLeft()) {
+                    if (line.getLeftLine() != null) {
                         leftLine++;
                     }
-                    if (line.hasRight()) {
+                    if (line.getRightLine() != null) {
                         rightLine++;
                     }
                 }

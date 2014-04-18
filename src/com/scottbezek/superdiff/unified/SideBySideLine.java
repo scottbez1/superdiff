@@ -22,14 +22,6 @@ public class SideBySideLine {
         mRightLine = rightLine;
     }
 
-    public boolean hasLeft() {
-        return mLeftLine != null;
-    }
-
-    public boolean hasRight() {
-        return mRightLine != null;
-    }
-
     public int getLeftLineNumber() {
         return mLeftLineNumber;
     }

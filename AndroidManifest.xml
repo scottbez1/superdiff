@@ -15,7 +15,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.scottbezek.superdiff.ListViewActivity"
-            android:label="@string/title_activity_list_view" >
+            android:label="@string/title_activity_list_view"
+            android:theme="@style/DiffViewTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
