@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ListViewActivity" >
-		 <ListView
+		 <com.scottbezek.superdiff.list.HorizontalScrollObservingListView
 		     android:id="@+id/content_view"
 		     android:layout_width="match_parent"
 		     android:layout_height="match_parent"
