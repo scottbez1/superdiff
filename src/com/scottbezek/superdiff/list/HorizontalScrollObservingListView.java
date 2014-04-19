@@ -1,13 +1,19 @@
 package com.scottbezek.superdiff.list;
 
+import javax.annotation.Nonnull;
+
 import android.content.Context;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
 import android.widget.ListView;
 import android.widget.OverScroller;
+
+import com.scottbezek.util.Assert;
 
 /**
  * ListView that scrolls vertically normally, but allows pseudo scrolling
@@ -18,23 +24,35 @@ import android.widget.OverScroller;
  */
 public class HorizontalScrollObservingListView extends ListView {
 
+    private static final String TAG = HorizontalScrollObservingListView.class.getName();
+
+
+    private final OverScroller mScroller;
+    private final int mTouchSlop;
+    private final int mMinimumVelocity;
+    private final int mMaximumVelocity;
+
     public HorizontalScrollObservingListView(Context context) {
-        super(context);
-        initScrollView();
+        this(context, null);
     }
 
     public HorizontalScrollObservingListView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initScrollView();
+        this(context, attrs, 0);
     }
 
     public HorizontalScrollObservingListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initScrollView();
+
+        mScroller = new OverScroller(getContext());
+        setFocusable(true);
+        setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
+        setWillNotDraw(false);
+        final ViewConfiguration configuration = ViewConfiguration.get(getContext());
+        mTouchSlop = configuration.getScaledTouchSlop();
+        mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+        mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
     }
 
-
-    private OverScroller mScroller;
 
     /**
      * X position of the last focal point.
@@ -58,31 +76,30 @@ public class HorizontalScrollObservingListView extends ListView {
      */
     private VelocityTracker mVelocityTracker;
 
-    private int mTouchSlop;
-    private int mMinimumVelocity;
-    private int mMaximumVelocity;
-
     private int mScrollX;
+    private int mScrollRange = 800; // XXX
+    private HorizontalScrollListener mScrollListener;
 
-    private void initScrollView() {
-        mScroller = new OverScroller(getContext());
-        setFocusable(true);
-        setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
-        setWillNotDraw(false);
-        final ViewConfiguration configuration = ViewConfiguration.get(getContext());
-        mTouchSlop = configuration.getScaledTouchSlop();
-        mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
-        mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+    public void setScrollRange(int range) {
+        mScrollRange = range;
+        // TODO(sbezek): need to adjust mScrollX here?
     }
 
     private int getScrollRange() {
-        // TODO(sbezek): this is probably user-supplied?
-        return 100;
+        return mScrollRange;
     }
 
-    private void onHorizontalScrollChanged(int newX, int newY) {
-        // TODO(sbezek): notify listener?
-        // TODO(sbezek): is this method actually necessary? should I be using the normal onScrollChanged???
+    public void setHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
+        Assert.notNull(listener);
+        Assert.isNull(mScrollListener);
+        mScrollListener = listener;
+    }
+
+    private void onHorizontalScrollChanged(int newX, int oldX) {
+        Log.d(TAG, "Horizontal scroll from " + oldX + " to " + newX);
+        if (mScrollListener != null) {
+            mScrollListener.onHorizontalScroll(newX, oldX);
+        }
     }
 
     @Override
@@ -92,6 +109,8 @@ public class HorizontalScrollObservingListView extends ListView {
          * If we return true, onMotionEvent will be called and we do the actual
          * scrolling there.
          */
+
+        boolean superIntercept = super.onInterceptTouchEvent(ev);
 
         /*
         * Shortcut the most recurring case: the user is in the dragging
@@ -132,13 +151,6 @@ public class HorizontalScrollObservingListView extends ListView {
             }
 
             case MotionEvent.ACTION_DOWN: {
-                final int x = (int) ev.getX();
-                if (!inChild(x, (int) ev.getY())) {
-                    mIsBeingDragged = false;
-                    recycleVelocityTracker();
-                    break;
-                }
-
                 /*
                  * Remember location of down touch.
                  */
@@ -163,7 +175,7 @@ public class HorizontalScrollObservingListView extends ListView {
                 mIsBeingDragged = false;
                 mHasLastFocusX = false;
                 if (mScroller.springBack(mScrollX, /*mScrollY*/0, 0, getScrollRange(), 0, 0)) {
-                    postInvalidateOnAnimation();
+                    ViewCompat.postInvalidateOnAnimation(this);
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN: {
@@ -181,21 +193,21 @@ public class HorizontalScrollObservingListView extends ListView {
         * The only time we want to intercept motion events is if we are in the
         * drag mode.
         */
-        return mIsBeingDragged;
+        return mIsBeingDragged || superIntercept;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        super.onTouchEvent(ev);
+
         initVelocityTrackerIfNotExists();
         mVelocityTracker.addMovement(ev);
 
         final int action = ev.getAction();
 
+
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {
-                if (getChildCount() == 0) {
-                    return false;
-                }
                 if ((mIsBeingDragged = !mScroller.isFinished())) {
                     final ViewParent parent = getParent();
                     if (parent != null) {
@@ -238,14 +250,11 @@ public class HorizontalScrollObservingListView extends ListView {
                     final int oldX = mScrollX;
                     final int range = getScrollRange();
 
-//                    if (overScrollBy(deltaX, 0, mScrollX, 0, range, 0,
-//                            mOverscrollDistance, 0, true)) {
-//                        // Break our velocity if we hit a scroll barrier.
-//                        mVelocityTracker.clear();
-//                    }
-                    // TODO(sbezek): maybe need to do the clamping manually?
+                    if (fauxOverScrollBy(deltaX, mScrollX, range)) {
+                        // Break our velocity if we hit a scroll barrier.
+                        mVelocityTracker.clear();
+                    }
                     onHorizontalScrollChanged(mScrollX, oldX);
-//                    onScrollChanged(mScrollX, mScrollY, oldX, oldY);
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -255,14 +264,12 @@ public class HorizontalScrollObservingListView extends ListView {
                     velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int initialVelocity = (int) velocityTracker.getXVelocity(pointerId);
 
-                    if (getChildCount() > 0) {
-                        if ((Math.abs(initialVelocity) > mMinimumVelocity)) {
-                            fling(-initialVelocity);
-                        } else {
-                            if (mScroller.springBack(mScrollX, /*mScrollY*/0, 0,
-                                    getScrollRange(), 0, 0)) {
-                                postInvalidateOnAnimation();
-                            }
+                    if ((Math.abs(initialVelocity) > mMinimumVelocity)) {
+                        fling(-initialVelocity);
+                    } else {
+                        if (mScroller.springBack(mScrollX, 0, 0,
+                                getScrollRange(), 0, 0)) {
+                            ViewCompat.postInvalidateOnAnimation(this);
                         }
                     }
 
@@ -272,9 +279,9 @@ public class HorizontalScrollObservingListView extends ListView {
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
-                if (mIsBeingDragged && getChildCount() > 0) {
-                    if (mScroller.springBack(mScrollX, /*mScrollY*/0, 0, getScrollRange(), 0, 0)) {
-                        postInvalidateOnAnimation();
+                if (mIsBeingDragged) {
+                    if (mScroller.springBack(mScrollX, 0, 0, getScrollRange(), 0, 0)) {
+                        ViewCompat.postInvalidateOnAnimation(this);
                     }
                     mHasLastFocusX = false;
                     mIsBeingDragged = false;
@@ -337,9 +344,21 @@ public class HorizontalScrollObservingListView extends ListView {
         return (int) focusX;
     }
 
-    private boolean inChild(int x, int y) {
-        // This method is from the HorizontalScrollView; for us, we always assume the touch is on "content"
-        return true;
+    private boolean fauxOverScrollBy(int deltaX, int scrollX, int scrollRangeX) {
+        boolean clamped = false;
+
+        int result = scrollX + deltaX;
+        if (result < 0) {
+            result = 0;
+            clamped = true;
+        } else if (result > scrollRangeX) {
+            result = scrollRangeX;
+            clamped = true;
+        }
+
+        mScrollX = result;
+
+        return clamped;
     }
 
     /**
@@ -350,13 +369,54 @@ public class HorizontalScrollObservingListView extends ListView {
      *                  which means we want to scroll towards the left.
      */
     public void fling(int velocityX) {
-            int width = getWidth() - mPaddingRight - mPaddingLeft;
-            int right = getChildAt(0).getWidth();
+            int maxX = getScrollRange();
 
-            mScroller.fling(mScrollX, mScrollY, velocityX, 0, 0,
-                    Math.max(0, right - width), 0, 0, width/2, 0);
+            mScroller.fling(mScrollX, 0, velocityX, 0, 0,
+                    maxX, 0, 0, maxX/2, 0);
 
-            postInvalidateOnAnimation();
+            ViewCompat.postInvalidateOnAnimation(this);
     }
 
+    @Override
+    public void computeScroll() {
+        super.computeScroll();
+
+        computeFauxScroll();
+    }
+
+    private void computeFauxScroll() {
+            if (mScroller.computeScrollOffset()) {
+                // This is called at drawing time by ViewGroup.  We don't want to
+                // re-show the scrollbars at this point, which scrollTo will do,
+                // so we replicate most of scrollTo here.
+                //
+                //         It's a little odd to call onScrollChanged from inside the drawing.
+                //
+                //         It is, except when you remember that computeScroll() is used to
+                //         animate scrolling. So unless we want to defer the onScrollChanged()
+                //         until the end of the animated scrolling, we don't really have a
+                //         choice here.
+                //
+                //         I agree.  The alternative, which I think would be worse, is to post
+                //         something and tell the subclasses later.  This is bad because there
+                //         will be a window where mScrollX/Y is different from what the app
+                //         thinks it is.
+                //
+                int oldX = mScrollX;
+                int x = mScroller.getCurrX();
+
+                if (oldX != x) {
+                    final int range = getScrollRange();
+                    fauxOverScrollBy(x - oldX, oldX, range);
+                    onHorizontalScrollChanged(mScrollX, oldX);
+                }
+
+                ViewCompat.postInvalidateOnAnimation(this);
+            }
+    }
+
+
+    public interface HorizontalScrollListener {
+        void onHorizontalScroll(int newX, int oldX);
+    }
 }
