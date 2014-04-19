@@ -4,6 +4,7 @@ import javax.annotation.concurrent.Immutable;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -18,8 +19,10 @@ public class SideBySideLineView extends LinearLayout {
     private final int mRemovedBackgroundColor;
     private final int mAddedBackgroundColor;
 
+    private final View mLeftContainer;
     private final TextView mLeftLineNumber;
     private final TextView mLeftContents;
+    private final View mRightContainer;
     private final TextView mRightLineNumber;
     private final TextView mRightContents;
 
@@ -29,8 +32,10 @@ public class SideBySideLineView extends LinearLayout {
         setOrientation(LinearLayout.HORIZONTAL);
         inflate(getContext(), R.layout.side_by_side_line_item, this);
 
+        mLeftContainer = findViewById(R.id.left_container);
         mLeftLineNumber = (TextView)findViewById(R.id.left_line_number);
         mLeftContents = (TextView)findViewById(R.id.left_line_contents);
+        mRightContainer = findViewById(R.id.right_container);
         mRightLineNumber = (TextView)findViewById(R.id.right_line_number);
         mRightContents = (TextView)findViewById(R.id.right_line_contents);
 
@@ -105,6 +110,11 @@ public class SideBySideLineView extends LinearLayout {
         lp = mRightContents.getLayoutParams();
         lp.width = widths.getLineContentsWidthPx();
         mRightContents.setLayoutParams(lp);
+    }
+
+    public void setPseudoScrollX(int scrollX) {
+        mLeftContainer.setPadding(-scrollX, 0, 0, 0);
+        mRightContainer.setPadding(-scrollX, 0, 0, 0);
     }
 
     @Immutable

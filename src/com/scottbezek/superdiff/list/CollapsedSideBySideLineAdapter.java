@@ -20,10 +20,14 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
     private final List<CollapsedOrLine> mItems;
     private final ItemWidths mItemWidthInfo;
+    private final HorizontalScrollController mScrollController;
 
-    public CollapsedSideBySideLineAdapter(List<CollapsedOrLine> items, ItemWidths itemWidthInfo) {
+    public CollapsedSideBySideLineAdapter(List<CollapsedOrLine> items,
+            ItemWidths itemWidthInfo,
+            HorizontalScrollController scrollController) {
         mItems = items;
         mItemWidthInfo = itemWidthInfo;
+        mScrollController = scrollController;
     }
 
     @Override
@@ -61,6 +65,8 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
         }
 
         view.setLine(line);
+
+        view.setPseudoScrollX(mScrollController.getHorizontalScrollPosition());
         return view;
     }
 

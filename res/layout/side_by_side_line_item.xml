@@ -11,6 +11,7 @@
         style="@style/DiffLineNumber"
         />
     <RelativeLayout 
+        android:id="@+id/left_container"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
@@ -29,7 +30,8 @@
         android:layout_height="wrap_content"
         style="@style/DiffLineNumber"
         />
-    <RelativeLayout 
+    <RelativeLayout
+        android:id="@+id/right_container"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"

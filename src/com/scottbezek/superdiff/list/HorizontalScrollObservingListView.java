@@ -22,10 +22,9 @@ import com.scottbezek.util.Assert;
  * range and register for horizontal scroll change events and then use those to
  * adjust views inside the list.
  */
-public class HorizontalScrollObservingListView extends ListView {
+public class HorizontalScrollObservingListView extends ListView implements HorizontalScrollController {
 
     private static final String TAG = HorizontalScrollObservingListView.class.getName();
-
 
     private final OverScroller mScroller;
     private final int mTouchSlop;
@@ -81,17 +80,20 @@ public class HorizontalScrollObservingListView extends ListView {
     private HorizontalScrollListener mScrollListener;
 
 
+    @Override
     public void setHorizontalScrollRange(int range) {
         mScrollRange = range;
         // TODO(sbezek): need to adjust mScrollX here?
     }
 
+    @Override
     public void setHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
         Assert.notNull(listener);
         Assert.isNull(mScrollListener);
         mScrollListener = listener;
     }
 
+    @Override
     public int getHorizontalScrollPosition() {
         return mScrollX;
     }

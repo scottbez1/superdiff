@@ -44,7 +44,9 @@ public class ListViewActivity extends Activity {
         ItemWidths itemWidthInfo = calculateItemWidths(getResources(), diff);
         itemWidthTimer.stopAndLog();
 
-        listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo));
+        listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo, listView));
+
+        // TODO(sbezek): scroll range should actually be (lineContentWidth - availableViewWidth)
         listView.setHorizontalScrollRange(itemWidthInfo.getLineContentsWidthPx());
     }
 
