@@ -17,7 +17,7 @@ import com.scottbezek.util.Assert;
 
 /**
  * ListView that scrolls vertically normally, but allows pseudo scrolling
- * horizontally simulatneously. The horizontal pseudo-scrolling don't directly
+ * horizontally simultaneously. The horizontal pseudo-scrolling don't directly
  * affect any views in the list; instead you can specify the horizontal scroll
  * range and register for horizontal scroll change events and then use those to
  * adjust views inside the list.
@@ -77,16 +77,13 @@ public class HorizontalScrollObservingListView extends ListView {
     private VelocityTracker mVelocityTracker;
 
     private int mScrollX;
-    private int mScrollRange = 800; // XXX
+    private int mScrollRange;
     private HorizontalScrollListener mScrollListener;
 
-    public void setScrollRange(int range) {
+
+    public void setHorizontalScrollRange(int range) {
         mScrollRange = range;
         // TODO(sbezek): need to adjust mScrollX here?
-    }
-
-    private int getScrollRange() {
-        return mScrollRange;
     }
 
     public void setHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
@@ -95,11 +92,19 @@ public class HorizontalScrollObservingListView extends ListView {
         mScrollListener = listener;
     }
 
+    public int getHorizontalScrollPosition() {
+        return mScrollX;
+    }
+
     private void onHorizontalScrollChanged(int newX, int oldX) {
         Log.d(TAG, "Horizontal scroll from " + oldX + " to " + newX);
         if (mScrollListener != null) {
             mScrollListener.onHorizontalScroll(newX, oldX);
         }
+    }
+
+    private int getScrollRange() {
+        return mScrollRange;
     }
 
     @Override

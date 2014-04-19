@@ -5,17 +5,18 @@ import java.util.Iterator;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
-import android.widget.ListView;
 
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.Collapsed;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
+import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
 import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.Chunk;
 import com.scottbezek.superdiff.unified.ILineReader;
@@ -33,26 +34,24 @@ public class ListViewActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ListView listView = (ListView)findViewById(R.id.content_view);
+        HorizontalScrollObservingListView listView = (HorizontalScrollObservingListView)
+                findViewById(R.id.content_view);
 
-        List<CollapsedOrLine> diff = getDiff();
-        ItemWidths itemWidthInfo = calculateItemWidths(diff);
-
-//        LayoutParams lp = listView.getLayoutParams();
-//        // TODO(sbezek): this is kind of lame and ignores things like margins, padding, etc.
-//        lp.width = itemWidthInfo.getLineContentsWidthPx() * 2 + itemWidthInfo.getLineNumberWidthPx() * 2;
-//        listView.setLayoutParams(lp);
+        // TODO(sbezek): move to a loader
+        List<CollapsedOrLine> diff = getDiff(getResources());
+        ItemWidths itemWidthInfo = calculateItemWidths(getResources(), diff);
 
         listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo));
+        listView.setHorizontalScrollRange(itemWidthInfo.getLineContentsWidthPx());
     }
 
-    private List<CollapsedOrLine> getDiff() {
+    private static List<CollapsedOrLine> getDiff(Resources resources) {
         long startRead = SystemClock.elapsedRealtime();
-        final String[] lines = DummyContent.readLines(getResources(), R.raw.sample_view_before);
+        final String[] lines = DummyContent.readLines(resources, R.raw.sample_view_before);
         Log.d(TAG, "Read " + lines.length + "lines in " + (SystemClock.elapsedRealtime() - startRead) + "ms");
 
         Parser parser = new Parser(System.out);
-        SingleFileDiff d = parser.parse(DummyContent.getScanner(getResources(), R.raw.sample_view_diff));
+        SingleFileDiff d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
 
 
         long startApply = SystemClock.elapsedRealtime();
@@ -64,6 +63,14 @@ public class ListViewActivity extends Activity {
         Iterator<Chunk> chunkIter = d.getChunks().iterator();
         Chunk nextChunk = chunkIter.hasNext() ? chunkIter.next() : null;
 
+        /*
+         * Generate the collapsed diff. Simple collapse policy, based on
+         * collapsed parts of the original diff.
+         *
+         * (yes, it's pointless to have already generated the full output if
+         * we're just going to collapse the code based on the unified diff, but
+         * eventually we'll need that to do better/adjustable collapsing)
+         */
         int leftLine = 1;
         int rightLine = 1;
         while (leftLine <= lines.length) {
@@ -107,9 +114,9 @@ public class ListViewActivity extends Activity {
         return items;
     }
 
-    private ItemWidths calculateItemWidths(List<CollapsedOrLine> diff) {
+    private static ItemWidths calculateItemWidths(Resources resources, List<CollapsedOrLine> diff) {
         Paint p = new Paint();
-        p.setTextSize(getResources().getDimension(R.dimen.code_text_size));
+        p.setTextSize(resources.getDimension(R.dimen.code_text_size));
         p.setTypeface(Typeface.MONOSPACE);
 
         // Because we're using a monospace font, cheat by finding widest line (#
@@ -142,7 +149,10 @@ public class ListViewActivity extends Activity {
                 getWidthOfNCharacters(p, widestContentsChars));
     }
 
-    private int getWidthOfNCharacters(Paint p, int numChars) {
+    /**
+     * Only valid for monospaced fonts.
+     */
+    private static int getWidthOfNCharacters(Paint p, int numChars) {
         // Only is valid for monospaced fonts
         Assert.isTrue(p.getTypeface() == Typeface.MONOSPACE);
 
@@ -152,26 +162,6 @@ public class ListViewActivity extends Activity {
         }
         return (int)p.measureText(dummy.toString());
     }
-
-//  for (Chunk c : d.getAllChunks()) {
-//      fooReader.moveToLine(c.getLeftStartLine()-1);
-//      c.applyForward(fooReader, fooWriter);
-//  }
-
-//
-//
-//  int widest = 0;
-//  String widestText = "";
-//  for (String line : lines) {
-//      if (line.length() > widest) {
-//          widest = line.length();
-//          widestText = line;
-//      }
-//  }
-//  // TODO also account for other things in the item (e.g line number)
-//  LayoutParams lp = listView.getLayoutParams();
-//  lp.width = (int)p.measureText(widestText);
-//  listView.setLayoutParams(lp);
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
