@@ -9,7 +9,6 @@ import android.content.res.Resources;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 
@@ -24,6 +23,7 @@ import com.scottbezek.superdiff.unified.Parser;
 import com.scottbezek.superdiff.unified.SideBySideLine;
 import com.scottbezek.superdiff.unified.SingleFileDiff;
 import com.scottbezek.util.Assert;
+import com.scottbezek.util.StopWatch;
 
 public class ListViewActivity extends Activity {
 
@@ -39,22 +39,26 @@ public class ListViewActivity extends Activity {
 
         // TODO(sbezek): move to a loader
         List<CollapsedOrLine> diff = getDiff(getResources());
+
+        StopWatch itemWidthTimer = StopWatch.start("calculate_item_widths");
         ItemWidths itemWidthInfo = calculateItemWidths(getResources(), diff);
+        itemWidthTimer.stopAndLog();
 
         listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo));
         listView.setHorizontalScrollRange(itemWidthInfo.getLineContentsWidthPx());
     }
 
     private static List<CollapsedOrLine> getDiff(Resources resources) {
-        long startRead = SystemClock.elapsedRealtime();
+        StopWatch readTimer = StopWatch.start("read_original_file");
         final String[] lines = DummyContent.readLines(resources, R.raw.sample_view_before);
-        Log.d(TAG, "Read " + lines.length + "lines in " + (SystemClock.elapsedRealtime() - startRead) + "ms");
+        readTimer.stopAndLog();
+        Log.d(TAG, "Read " + lines.length + " lines");
 
         Parser parser = new Parser(System.out);
         SingleFileDiff d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
 
 
-        long startApply = SystemClock.elapsedRealtime();
+        StopWatch applyTimer = StopWatch.start("apply_diff");
 
         List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
         List<SideBySideLine> currentCollapse = null;
@@ -109,7 +113,7 @@ public class ListViewActivity extends Activity {
             currentCollapse = null;
         }
 
-        Log.d(TAG, "Applied diff in " + (SystemClock.elapsedRealtime() - startApply) + "ms");
+        applyTimer.stopAndLog();
 
         return items;
     }
