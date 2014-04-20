@@ -1,17 +1,21 @@
 package com.scottbezek.superdiff.list;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.CheckForNull;
 
 import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnAttachStateChangeListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.scottbezek.superdiff.R;
+import com.scottbezek.superdiff.list.HorizontalScrollObservingListView.HorizontalScrollListener;
 import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.SideBySideLine;
 import com.scottbezek.util.Assert;
@@ -21,6 +25,32 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
     private final List<CollapsedOrLine> mItems;
     private final ItemWidths mItemWidthInfo;
     private final HorizontalScrollController mScrollController;
+    private final Set<SideBySideLineView> mAttachedViews = new HashSet<SideBySideLineView>();
+
+    private final OnAttachStateChangeListener mRowAttachStateListener = new OnAttachStateChangeListener() {
+
+        @Override
+        public void onViewAttachedToWindow(View v) {
+            SideBySideLineView lineView = (SideBySideLineView)v;
+            Assert.isTrue(mAttachedViews.add(lineView));
+        }
+
+        @Override
+        public void onViewDetachedFromWindow(View v) {
+            SideBySideLineView lineView = (SideBySideLineView)v;
+            Assert.isTrue(mAttachedViews.remove(lineView));
+        }
+    };
+
+    private final HorizontalScrollListener mHorizontalScrollListener = new HorizontalScrollListener() {
+
+        @Override
+        public void onHorizontalScroll(int newX, int oldX) {
+            for (SideBySideLineView lineView : mAttachedViews) {
+                lineView.setPseudoScrollX(newX);
+            }
+        }
+    };
 
     public CollapsedSideBySideLineAdapter(List<CollapsedOrLine> items,
             ItemWidths itemWidthInfo,
@@ -28,6 +58,7 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
         mItems = items;
         mItemWidthInfo = itemWidthInfo;
         mScrollController = scrollController;
+        mScrollController.registerHorizontalScrollListener(mHorizontalScrollListener);
     }
 
     @Override
@@ -60,6 +91,7 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
         if (convertView == null) {
             view = new SideBySideLineView(parent.getContext());
             view.setItemWidths(mItemWidthInfo);
+            view.addOnAttachStateChangeListener(mRowAttachStateListener);
         } else {
             view = (SideBySideLineView)convertView;
         }

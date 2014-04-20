@@ -113,8 +113,8 @@ public class SideBySideLineView extends LinearLayout {
     }
 
     public void setPseudoScrollX(int scrollX) {
-        mLeftContainer.setPadding(-scrollX, 0, 0, 0);
-        mRightContainer.setPadding(-scrollX, 0, 0, 0);
+        mLeftContainer.setScrollX(scrollX);
+        mRightContainer.setScrollX(scrollX);
     }
 
     @Immutable

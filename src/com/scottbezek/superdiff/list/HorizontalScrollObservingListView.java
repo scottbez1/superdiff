@@ -1,5 +1,8 @@
 package com.scottbezek.superdiff.list;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.annotation.Nonnull;
 
 import android.content.Context;
@@ -30,6 +33,8 @@ public class HorizontalScrollObservingListView extends ListView implements Horiz
     private final int mTouchSlop;
     private final int mMinimumVelocity;
     private final int mMaximumVelocity;
+
+    private final Set<HorizontalScrollListener> mScrollListeners = new HashSet<HorizontalScrollListener>();
 
     public HorizontalScrollObservingListView(Context context) {
         this(context, null);
@@ -77,31 +82,40 @@ public class HorizontalScrollObservingListView extends ListView implements Horiz
 
     private int mScrollX;
     private int mScrollRange;
-    private HorizontalScrollListener mScrollListener;
 
 
     @Override
     public void setHorizontalScrollRange(int range) {
+        Assert.mainThreadOnly();
         mScrollRange = range;
         // TODO(sbezek): need to adjust mScrollX here?
     }
 
     @Override
-    public void setHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
+    public void registerHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
+        Assert.mainThreadOnly();
         Assert.notNull(listener);
-        Assert.isNull(mScrollListener);
-        mScrollListener = listener;
+        Assert.isTrue(mScrollListeners.add(listener));
+    }
+
+    @Override
+    public void unregisterHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
+        Assert.mainThreadOnly();
+        Assert.notNull(listener);
+        Assert.isTrue(mScrollListeners.remove(listener));
     }
 
     @Override
     public int getHorizontalScrollPosition() {
+        Assert.mainThreadOnly();
         return mScrollX;
     }
 
     private void onHorizontalScrollChanged(int newX, int oldX) {
         Log.d(TAG, "Horizontal scroll from " + oldX + " to " + newX);
-        if (mScrollListener != null) {
-            mScrollListener.onHorizontalScroll(newX, oldX);
+        Assert.mainThreadOnly();
+        for (HorizontalScrollListener listener : mScrollListeners) {
+            listener.onHorizontalScroll(newX, oldX);
         }
     }
 
@@ -109,6 +123,7 @@ public class HorizontalScrollObservingListView extends ListView implements Horiz
         return mScrollRange;
     }
 
+    // TODO(sbezek): would it be possible to simplify things with a GestureDetector here instead?
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         /*
@@ -211,7 +226,6 @@ public class HorizontalScrollObservingListView extends ListView implements Horiz
         mVelocityTracker.addMovement(ev);
 
         final int action = ev.getAction();
-
 
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {

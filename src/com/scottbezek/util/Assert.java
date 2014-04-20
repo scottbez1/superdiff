@@ -1,5 +1,7 @@
 package com.scottbezek.util;
 
+import android.os.Looper;
+
 public class Assert {
 
     public static void isNull(Object o) {
@@ -30,4 +32,9 @@ public class Assert {
         throw new AssertionError(message);
     }
 
+    public static void mainThreadOnly() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            throw new AssertionError("Must be called on the UI thread");
+        }
+    }
 }
