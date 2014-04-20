@@ -11,6 +11,8 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.view.View.OnLayoutChangeListener;
 
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.Collapsed;
@@ -29,25 +31,39 @@ public class ListViewActivity extends Activity {
 
     private static final String TAG = ListViewActivity.class.getName();
 
+    private HorizontalScrollObservingListView mListView;
+    private ItemWidths mItemWidthInfo;
+    private final OnLayoutChangeListener mListviewLayoutChangeListener = new OnLayoutChangeListener() {
+
+        @Override
+        public void onLayoutChange(View v, int left, int top, int right,
+                int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+            int contentWidth = mItemWidthInfo.getLineContentsWidthPx();
+            int scrollContainerWidth = (right - left)/2 - mItemWidthInfo.getLineNumberWidthPx();
+            mListView.setHorizontalScrollRange(Math.max(0, contentWidth - scrollContainerWidth));
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        HorizontalScrollObservingListView listView = (HorizontalScrollObservingListView)
+        mListView = (HorizontalScrollObservingListView)
                 findViewById(R.id.content_view);
 
         // TODO(sbezek): move to a loader
         List<CollapsedOrLine> diff = getDiff(getResources());
 
         StopWatch itemWidthTimer = StopWatch.start("calculate_item_widths");
-        ItemWidths itemWidthInfo = calculateItemWidths(getResources(), diff);
+        mItemWidthInfo = calculateItemWidths(getResources(), diff);
         itemWidthTimer.stopAndLog();
 
-        listView.setAdapter(new CollapsedSideBySideLineAdapter(diff, itemWidthInfo, listView));
+        mListView.setAdapter(new CollapsedSideBySideLineAdapter(diff, mItemWidthInfo, mListView));
 
-        // TODO(sbezek): scroll range should actually be (lineContentWidth - availableViewWidth)
-        listView.setHorizontalScrollRange(itemWidthInfo.getLineContentsWidthPx());
+        // If the listview changes dimensions (including the initial layout), we
+        // need to recalculate the horizontal scroll range.
+        mListView.addOnLayoutChangeListener(mListviewLayoutChangeListener);
     }
 
     private static List<CollapsedOrLine> getDiff(Resources resources) {
