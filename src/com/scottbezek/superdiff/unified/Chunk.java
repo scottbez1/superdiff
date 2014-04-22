@@ -12,7 +12,7 @@ import com.scottbezek.superdiff.unified.Parser.DiffParseException;
 import com.scottbezek.util.Assert;
 
 @Immutable
-public class Chunk implements IForwardApplicable {
+public class Chunk implements IForwardApplicable, IDiffLines {
 
     private final int mLeftStartLine;
     private final List<Block> mBlocks;
@@ -31,6 +31,18 @@ public class Chunk implements IForwardApplicable {
         List<SideBySideLine> output = new ArrayList<SideBySideLine>();
         for (Block block : mBlocks) {
             output.addAll(block.applyForward(leftFile));
+        }
+        return output;
+    }
+
+    /**
+     * Get the raw lines of this chunk.
+     */
+    @Override
+    public List<SideBySideLine> getLines() {
+        List<SideBySideLine> output = new ArrayList<SideBySideLine>();
+        for (Block block : mBlocks) {
+            output.addAll(block.getLines());
         }
         return output;
     }
@@ -153,7 +165,7 @@ public class Chunk implements IForwardApplicable {
         }
     }
 
-    public interface Block extends IForwardApplicable {
+    public interface Block extends IForwardApplicable, IDiffLines {
 
         @Immutable
         public static class Unchanged implements Block {
@@ -178,6 +190,19 @@ public class Chunk implements IForwardApplicable {
                     if (!line.equals(consumedLine)) {
                         throw new IllegalStateException("Expected:\n" + line + "\nBut got:\n" + consumedLine);
                     }
+                    output.add(new SideBySideLine(leftLine, line, rightLine, line));
+                    leftLine++;
+                    rightLine++;
+                }
+                return output;
+            }
+
+            @Override
+            public List<SideBySideLine> getLines() {
+                int leftLine = mLeftStartLine;
+                int rightLine = mRightStartLine;
+                List<SideBySideLine> output = new ArrayList<SideBySideLine>();
+                for (String line : mLines) {
                     output.add(new SideBySideLine(leftLine, line, rightLine, line));
                     leftLine++;
                     rightLine++;
@@ -284,6 +309,35 @@ public class Chunk implements IForwardApplicable {
                 return output;
             }
 
+            @Override
+            public List<SideBySideLine> getLines() {
+                int outLines = Math.max(mRemovedLines.size(), mAddedLines.size());
+
+                int leftLine = mLeftStartLine;
+                int rightLine = mRightStartLine;
+                List<SideBySideLine> output = new ArrayList<SideBySideLine>();
+
+                for (int i = 0; i < outLines; i++) {
+                    String expectedRemovedLine = null;
+                    String addedLine = null;
+                    if (i < mRemovedLines.size()) {
+                        expectedRemovedLine = mRemovedLines.get(i);
+                    }
+                    if (i < mAddedLines.size()) {
+                        addedLine = mAddedLines.get(i);
+                    }
+                    SideBySideLine line = new SideBySideLine(leftLine, expectedRemovedLine, rightLine, addedLine);
+                    output.add(line);
+
+                    if (line.getLeftLine() != null) {
+                        leftLine++;
+                    }
+                    if (line.getRightLine() != null) {
+                        rightLine++;
+                    }
+                }
+                return output;
+            }
         }
     }
 }

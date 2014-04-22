@@ -15,8 +15,9 @@ import android.view.View;
 import android.view.View.OnLayoutChangeListener;
 
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
-import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.Collapsed;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedLines;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedUnknown;
 import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
 import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.Chunk;
@@ -67,7 +68,7 @@ public class ListViewActivity extends Activity {
         mListView.addOnLayoutChangeListener(mListviewLayoutChangeListener);
     }
 
-    private static List<CollapsedOrLine> getDiff(Resources resources) {
+    private static List<CollapsedOrLine> getDiffWithFullContents(Resources resources) {
         StopWatch readTimer = StopWatch.start("read_original_file");
         final String[] lines = DummyContent.readLines(resources, R.raw.sample_view_before);
         readTimer.stopAndLog();
@@ -116,7 +117,7 @@ public class ListViewActivity extends Activity {
                 currentCollapse.add(diffLine);
             } else {
                 if (currentCollapse != null) {
-                    items.add(CollapsedOrLine.of(new Collapsed(currentCollapse)));
+                    items.add(CollapsedOrLine.of(new CollapsedLines(currentCollapse)));
                     currentCollapse = null;
                 }
 
@@ -134,11 +135,41 @@ public class ListViewActivity extends Activity {
         }
 
         if (currentCollapse != null) {
-            items.add(CollapsedOrLine.of(new Collapsed(currentCollapse)));
+            items.add(CollapsedOrLine.of(new CollapsedLines(currentCollapse)));
             currentCollapse = null;
         }
 
         applyTimer.stopAndLog();
+
+        return items;
+    }
+
+
+    private static List<CollapsedOrLine> getDiff(Resources resources) {
+        Parser parser = new Parser(System.out);
+        SingleFileDiff d;
+        try {
+            d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
+        } catch (DiffParseException e) {
+            // TODO(sbezek): handle this reasonably once diff parsing is factored out of here
+            throw new RuntimeException(e);
+        }
+
+        List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
+
+        int curLeftLine = 1;
+        for (Chunk chunk : d.getChunks()) {
+            final int leftStartLine = chunk.getLeftStartLine();
+            if (leftStartLine > curLeftLine) {
+                items.add(CollapsedOrLine.of(new CollapsedUnknown(leftStartLine - curLeftLine)));
+            }
+            for (SideBySideLine line : chunk.getLines()) {
+                items.add(CollapsedOrLine.of(line));
+                if (line.getLeftLine() != null) {
+                    curLeftLine++;
+                }
+            }
+        }
 
         return items;
     }

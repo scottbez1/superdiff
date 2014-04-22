@@ -132,19 +132,48 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
     }
 
     /**
+     * A collapsed section of the diff.
+     */
+    public interface Collapsed {
+
+        /**
+         * Number of lines collapsed.
+         */
+        public int size();
+    }
+
+    /**
      * A collapsed set of {@link SideBySideLine}s, to be represented as a single
      * small row in the diff view.
      */
-    public static class Collapsed {
+    public static class CollapsedLines implements Collapsed {
 
         private final List<SideBySideLine> mLines;
 
-        public Collapsed(List<SideBySideLine> collapsedLines) {
+        public CollapsedLines(List<SideBySideLine> collapsedLines) {
             mLines = collapsedLines;
         }
 
+        @Override
         public int size() {
             return mLines.size();
+        }
+    }
+
+    /**
+     * Collapsed section of the diff with unknown actual line contents.
+     */
+    public static class CollapsedUnknown implements Collapsed {
+
+        private final int mNumLines;
+
+        public CollapsedUnknown(int numLines) {
+            mNumLines = numLines;
+        }
+
+        @Override
+        public int size() {
+            return mNumLines;
         }
     }
 
