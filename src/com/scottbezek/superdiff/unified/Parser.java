@@ -28,7 +28,7 @@ public class Parser {
         mDebugStream = debugOutput;
     }
 
-    public SingleFileDiff parse(Scanner input) {
+    public SingleFileDiff parse(Scanner input) throws DiffParseException {
         SingleFileDiff.Builder builder = new SingleFileDiff.Builder();
         Chunk.Builder chunkBuilder = null;
 
@@ -69,13 +69,17 @@ public class Parser {
                 }
                 chunkHeader.reset(line);
                 if (chunkHeader.matches()) {
-                    int leftStartLine = Integer.parseInt(chunkHeader.group(1));
-                    int leftLength = Integer.parseInt(chunkHeader.group(2));
-                    int rightStartLine = Integer.parseInt(chunkHeader.group(3));
-                    int rightLength = Integer.parseInt(chunkHeader.group(4));
+                    try {
+                        int leftStartLine = Integer.parseInt(chunkHeader.group(1));
+                        int leftLength = Integer.parseInt(chunkHeader.group(2));
+                        int rightStartLine = Integer.parseInt(chunkHeader.group(3));
+                        int rightLength = Integer.parseInt(chunkHeader.group(4));
 
-                    chunkBuilder = new Chunk.Builder(leftStartLine, leftLength, rightStartLine, rightLength);
-                    continue;
+                        chunkBuilder = new Chunk.Builder(leftStartLine, leftLength, rightStartLine, rightLength);
+                        continue;
+                    } catch (NumberFormatException e) {
+                        throw new DiffParseException("Failed to parse line numbers in header:" + line, e);
+                    }
                 }
 
                 // Unknown line type
@@ -86,7 +90,7 @@ public class Parser {
         return builder.build();
     }
 
-    public static class DiffParseException extends RuntimeException {
+    public static class DiffParseException extends Exception {
 
         private static final long serialVersionUID = 3306841385008577257L;
 

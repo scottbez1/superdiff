@@ -22,6 +22,7 @@ import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.Chunk;
 import com.scottbezek.superdiff.unified.ILineReader;
 import com.scottbezek.superdiff.unified.Parser;
+import com.scottbezek.superdiff.unified.Parser.DiffParseException;
 import com.scottbezek.superdiff.unified.SideBySideLine;
 import com.scottbezek.superdiff.unified.SingleFileDiff;
 import com.scottbezek.util.Assert;
@@ -73,7 +74,13 @@ public class ListViewActivity extends Activity {
         Log.d(TAG, "Read " + lines.length + " lines");
 
         Parser parser = new Parser(System.out);
-        SingleFileDiff d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
+        SingleFileDiff d;
+        try {
+            d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
+        } catch (DiffParseException e) {
+            // TODO(sbezek): handle this reasonably once diff parsing is factored out of here
+            throw new RuntimeException(e);
+        }
 
 
         StopWatch applyTimer = StopWatch.start("apply_diff");

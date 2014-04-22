@@ -8,6 +8,7 @@ import javax.annotation.concurrent.Immutable;
 
 import com.scottbezek.superdiff.unified.Chunk.Block.Delta;
 import com.scottbezek.superdiff.unified.Chunk.Block.Unchanged;
+import com.scottbezek.superdiff.unified.Parser.DiffParseException;
 import com.scottbezek.util.Assert;
 
 @Immutable
@@ -60,12 +61,12 @@ public class Chunk implements IForwardApplicable {
             return mLeftLinesProcessed == mLeftLength && mRightLinesProcessed == mRightLength;
         }
 
-        private void assertSize() {
+        private void assertSize() throws DiffParseException {
             if (mLeftLinesProcessed > mLeftLength) {
-                throw new IllegalStateException("More left lines than expected!");
+                throw new DiffParseException("More left lines than expected!");
             }
             if (mRightLinesProcessed > mRightLength) {
-                throw new IllegalStateException("More right lines than expected!");
+                throw new DiffParseException("More right lines than expected!");
             }
         }
 
@@ -96,7 +97,7 @@ public class Chunk implements IForwardApplicable {
             return mCurrentUnchangedBuilder;
         }
 
-        public void appendLineUnchanged(String line) {
+        public void appendLineUnchanged(String line) throws DiffParseException {
             prepareUnchangedBuilder().appendLine(line);
             mLeftLinesProcessed++;
             mRightLinesProcessed++;
@@ -122,25 +123,25 @@ public class Chunk implements IForwardApplicable {
             return mCurrentDeltaBuilder;
         }
 
-        public void appendLineLeftRemoved(String line) {
+        public void appendLineLeftRemoved(String line) throws DiffParseException {
             prepareDeltaBuilder().appendRemovedLine(line);
             mLeftLinesProcessed++;
             assertSize();
         }
 
-        public void appendLineRightAdded(String line) {
+        public void appendLineRightAdded(String line) throws DiffParseException {
             prepareDeltaBuilder().appendAddedLine(line);
             mRightLinesProcessed++;
             assertSize();
         }
 
-        public Chunk build() {
+        public Chunk build() throws DiffParseException {
             Assert.isFalse(mCurrentDeltaBuilder != null && mCurrentUnchangedBuilder != null);
             finishDeltaBlock();
             finishUnchangedBlock();
 
             if (!isComplete()) {
-                throw new IllegalStateException(
+                throw new DiffParseException(
                         "Chunk isn't complete. Expected " + mLeftLength
                                 + " changed left lines but got "
                                 + mLeftLinesProcessed + ". Expected "
