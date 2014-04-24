@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.concurrent.Immutable;
 
 import android.content.res.Resources;
 import android.view.LayoutInflater;
@@ -129,6 +130,26 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
     @Override
     public int getViewTypeCount() {
         return 2;
+    }
+
+    @Immutable
+    public static class SingleFileDiffData {
+
+        private final List<CollapsedOrLine> mItems;
+        private final ItemWidths mItemWidthInfo;
+
+        public SingleFileDiffData(List<CollapsedOrLine> items, ItemWidths itemWidthInfo) {
+            mItems = items;
+            mItemWidthInfo = itemWidthInfo;
+        }
+
+        public List<CollapsedOrLine> getItems() {
+            return mItems;
+        }
+
+        public ItemWidths getitemWidths() {
+            return mItemWidthInfo;
+        }
     }
 
     /**

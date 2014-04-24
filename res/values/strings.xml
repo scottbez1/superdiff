@@ -8,4 +8,8 @@
         <item quantity="one">%d line</item>
         <item quantity="other">%d lines</item>
     </plurals>
+
+    <string name="title_activity_dummy_main">DummyMainActivity</string>
+    <string name="demo">View a demo!</string>
+
 </resources>

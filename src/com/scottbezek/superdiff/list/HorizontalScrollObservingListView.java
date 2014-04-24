@@ -20,10 +20,14 @@ import com.scottbezek.util.Assert;
 
 /**
  * ListView that scrolls vertically normally, but allows pseudo scrolling
- * horizontally simultaneously. The horizontal pseudo-scrolling don't directly
+ * horizontally simultaneously. The horizontal pseudo-scrolling doesn't directly
  * affect any views in the list; instead you can specify the horizontal scroll
  * range and register for horizontal scroll change events and then use those to
  * adjust views inside the list.
+ * <p>
+ * This must be done at the ListView level, because any child view would
+ * otherwise have its touches intercepted by the parent ListView whenever
+ * there's a large enough vertical component.
  */
 public class HorizontalScrollObservingListView extends ListView implements HorizontalScrollController {
 

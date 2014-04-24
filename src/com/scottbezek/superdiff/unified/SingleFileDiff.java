@@ -8,7 +8,6 @@ import com.scottbezek.superdiff.unified.Parser.DiffParseException;
 
 public class SingleFileDiff {
 
-    @SuppressWarnings("unused") // TODO(sbezek): these should maybe be moved elsewhere?
     private final String mLeftFilename, mRightFilename;
 
     private final List<Chunk> mChunks;
@@ -21,6 +20,22 @@ public class SingleFileDiff {
 
     public List<Chunk> getChunks() {
         return mChunks;
+    }
+
+    public String getDisplayFileName() {
+        if (mLeftFilename.equals("/dev/null")) {
+            if (mRightFilename.startsWith("b/")) {
+                return mRightFilename.substring(2);
+            } else {
+                return mRightFilename;
+            }
+        } else {
+            if (mLeftFilename.startsWith("a/")) {
+                return mLeftFilename.substring(2);
+            } else {
+                return mLeftFilename;
+            }
+        }
     }
 
     public static class Builder {

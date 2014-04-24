@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.scottbezek.superdiff"
     android:versionCode="1"
-    android:versionName="1.0">
+    android:versionName="1.0" >
 
     <uses-sdk
         android:minSdkVersion="15"
@@ -16,7 +16,24 @@
         <activity
             android:name="com.scottbezek.superdiff.ListViewActivity"
             android:label="@string/title_activity_list_view"
-            android:theme="@style/DiffViewTheme">
+            android:theme="@style/DiffViewTheme"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                
+                <category android:name="android.intent.category.DEFAULT" />
+                
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="text/x-diff" />
+                <data android:mimeType="text/x-patch" />
+                <data android:mimeType="application/x-patch" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.scottbezek.superdiff.DummyMainActivity"
+            android:label="@string/title_activity_dummy_main"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -1,10 +1,14 @@
 package com.scottbezek.superdiff;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -55,7 +59,19 @@ public class ListViewActivity extends Activity {
                 findViewById(R.id.content_view);
 
         // TODO(sbezek): move to a loader
-        List<CollapsedOrLine> diff = getDiff(getResources());
+        final List<CollapsedOrLine> diff;
+        final Intent intent = getIntent();
+        if (intent.getData() == null) {
+            diff = getCollapsedDiff(DummyContent.getScanner(getResources(), R.raw.sample_view_diff));
+        } else {
+            try {
+                InputStream diffInput = getContentResolver().openInputStream(intent.getData());
+                diff = getCollapsedDiff(new Scanner(diffInput));
+            } catch (FileNotFoundException e) {
+                // TODO(sbezek): handle load failure reasonably once this is in a loader
+                throw new RuntimeException(e);
+            }
+        }
 
         StopWatch itemWidthTimer = StopWatch.start("calculate_item_widths");
         mItemWidthInfo = calculateItemWidths(getResources(), diff);
@@ -145,11 +161,11 @@ public class ListViewActivity extends Activity {
     }
 
 
-    private static List<CollapsedOrLine> getDiff(Resources resources) {
+    private static List<CollapsedOrLine> getCollapsedDiff(Scanner diff) {
         Parser parser = new Parser(System.out);
         SingleFileDiff d;
         try {
-            d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
+            d = parser.parse(diff);
         } catch (DiffParseException e) {
             // TODO(sbezek): handle this reasonably once diff parsing is factored out of here
             throw new RuntimeException(e);
