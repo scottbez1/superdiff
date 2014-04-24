@@ -1,9 +1,9 @@
 package com.scottbezek.superdiff;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -12,14 +12,13 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
 
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
-import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedLines;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedUnknown;
 import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
@@ -36,6 +35,8 @@ import com.scottbezek.util.StopWatch;
 public class ListViewActivity extends Activity {
 
     private static final String TAG = ListViewActivity.class.getName();
+
+    public static final String EXTRA_SAMPLE = "EXTRA_SAMPLE";
 
     private HorizontalScrollObservingListView mListView;
     private ItemWidths mItemWidthInfo;
@@ -61,13 +62,35 @@ public class ListViewActivity extends Activity {
         // TODO(sbezek): move to a loader
         final List<CollapsedOrLine> diff;
         final Intent intent = getIntent();
-        if (intent.getData() == null) {
-            diff = getCollapsedDiff(DummyContent.getScanner(getResources(), R.raw.sample_view_diff));
+        final Uri dataUri = intent.getData();
+        if (dataUri == null && !intent.hasExtra(EXTRA_SAMPLE)) {
+            finish();
+            return;
         } else {
+            final InputStream diffInput;
+            if (dataUri != null) {
+                try{
+                    diffInput = getContentResolver().openInputStream(dataUri);
+                } catch (FileNotFoundException e) {
+                    // TODO(sbezek): handle load failure reasonably once this is in a loader
+                    throw new RuntimeException(e);
+                }
+            } else {
+                String sampleName = intent.getStringExtra(EXTRA_SAMPLE);
+                if (sampleName.contains("..")) {
+                    finish();
+                    return;
+                }
+                try {
+                    diffInput = getResources().getAssets().open("samples/" + sampleName);
+                } catch (IOException e) {
+                    // TODO(sbezek): handle load failure reasonably once this is in a loader
+                    throw new RuntimeException(e);
+                }
+            }
             try {
-                InputStream diffInput = getContentResolver().openInputStream(intent.getData());
                 diff = getCollapsedDiff(new Scanner(diffInput));
-            } catch (FileNotFoundException e) {
+            } catch (DiffParseException e) {
                 // TODO(sbezek): handle load failure reasonably once this is in a loader
                 throw new RuntimeException(e);
             }
@@ -84,92 +107,10 @@ public class ListViewActivity extends Activity {
         mListView.addOnLayoutChangeListener(mListviewLayoutChangeListener);
     }
 
-    private static List<CollapsedOrLine> getDiffWithFullContents(Resources resources) {
-        StopWatch readTimer = StopWatch.start("read_original_file");
-        final String[] lines = DummyContent.readLines(resources, R.raw.sample_view_before);
-        readTimer.stopAndLog();
-        Log.d(TAG, "Read " + lines.length + " lines");
-
+    private static List<CollapsedOrLine> getCollapsedDiff(
+            Scanner unifiedDiffFileContents) throws DiffParseException {
         Parser parser = new Parser(System.out);
-        SingleFileDiff d;
-        try {
-            d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
-        } catch (DiffParseException e) {
-            // TODO(sbezek): handle this reasonably once diff parsing is factored out of here
-            throw new RuntimeException(e);
-        }
-
-
-        StopWatch applyTimer = StopWatch.start("apply_diff");
-
-        List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
-        List<SideBySideLine> currentCollapse = null;
-
-        ILineReader fooReader = new ArrayReader(lines);
-        Iterator<Chunk> chunkIter = d.getChunks().iterator();
-        Chunk nextChunk = chunkIter.hasNext() ? chunkIter.next() : null;
-
-        /*
-         * Generate the collapsed diff. Simple collapse policy, based on
-         * collapsed parts of the original diff.
-         *
-         * (yes, it's pointless to have already generated the full output if
-         * we're just going to collapse the code based on the unified diff, but
-         * eventually we'll need that to do better/adjustable collapsing)
-         */
-        int leftLine = 1;
-        int rightLine = 1;
-        while (leftLine <= lines.length) {
-            if (nextChunk == null || leftLine < nextChunk.getLeftStartLine()) {
-                // No relevant chunk for this line, so just output the current line
-                String line = fooReader.consumeLine();
-                final SideBySideLine diffLine = new SideBySideLine(leftLine, line, rightLine, line);
-                leftLine++;
-                rightLine++;
-
-                if (currentCollapse == null) {
-                    currentCollapse = new ArrayList<SideBySideLine>();
-                }
-                currentCollapse.add(diffLine);
-            } else {
-                if (currentCollapse != null) {
-                    items.add(CollapsedOrLine.of(new CollapsedLines(currentCollapse)));
-                    currentCollapse = null;
-                }
-
-                for (SideBySideLine line : nextChunk.applyForward(fooReader)) {
-                    items.add(CollapsedOrLine.of(line));
-                    if (line.getLeftLine() != null) {
-                        leftLine++;
-                    }
-                    if (line.getRightLine() != null) {
-                        rightLine++;
-                    }
-                }
-                nextChunk = chunkIter.hasNext() ? chunkIter.next() : null;
-            }
-        }
-
-        if (currentCollapse != null) {
-            items.add(CollapsedOrLine.of(new CollapsedLines(currentCollapse)));
-            currentCollapse = null;
-        }
-
-        applyTimer.stopAndLog();
-
-        return items;
-    }
-
-
-    private static List<CollapsedOrLine> getCollapsedDiff(Scanner diff) {
-        Parser parser = new Parser(System.out);
-        SingleFileDiff d;
-        try {
-            d = parser.parse(diff);
-        } catch (DiffParseException e) {
-            // TODO(sbezek): handle this reasonably once diff parsing is factored out of here
-            throw new RuntimeException(e);
-        }
+        SingleFileDiff d = parser.parse(unifiedDiffFileContents);
 
         List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
 

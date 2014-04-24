@@ -10,6 +10,6 @@
     </plurals>
 
     <string name="title_activity_dummy_main">DummyMainActivity</string>
-    <string name="demo">View a demo!</string>
+    <string name="view_sample">View sample!</string>
 
 </resources>

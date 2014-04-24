@@ -1,0 +1,270 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index d60f64a..0dde86a 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -2,7 +2,7 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.scottbezek.superdiff"
+     android:versionCode="1"
+-    android:versionName="1.0">
++    android:versionName="1.0" >
+ 
+     <uses-sdk
+         android:minSdkVersion="15"
+@@ -16,7 +16,24 @@
+         <activity
+             android:name="com.scottbezek.superdiff.ListViewActivity"
+             android:label="@string/title_activity_list_view"
+-            android:theme="@style/DiffViewTheme">
++            android:theme="@style/DiffViewTheme"
++            android:exported="true" >
++            <intent-filter>
++                <action android:name="android.intent.action.VIEW"/>
++                
++                <category android:name="android.intent.category.DEFAULT" />
++                
++                <data android:scheme="content" />
++                <data android:scheme="file" />
++                <data android:mimeType="text/x-diff" />
++                <data android:mimeType="text/x-patch" />
++                <data android:mimeType="application/x-patch" />
++            </intent-filter>
++        </activity>
++        <activity
++            android:name="com.scottbezek.superdiff.DummyMainActivity"
++            android:label="@string/title_activity_dummy_main"
++            android:exported="true" >
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 
+diff --git a/res/layout/activity_dummy_main.xml b/res/layout/activity_dummy_main.xml
+new file mode 100644
+index 0000000..bf83745
+--- /dev/null
++++ b/res/layout/activity_dummy_main.xml
+@@ -0,0 +1,17 @@
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:paddingBottom="@dimen/activity_vertical_margin"
++    android:paddingLeft="@dimen/activity_horizontal_margin"
++    android:paddingRight="@dimen/activity_horizontal_margin"
++    android:paddingTop="@dimen/activity_vertical_margin"
++    tools:context=".DummyMainActivity" >
++
++    <Button
++        android:id="@+id/button_demo"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="@string/demo" />
++
++</RelativeLayout>
+diff --git a/res/values/dimens.xml b/res/values/dimens.xml
+index b5cf4f6..e65cbce 100644
+--- a/res/values/dimens.xml
++++ b/res/values/dimens.xml
+@@ -1,4 +1,8 @@
++<?xml version="1.0" encoding="utf-8"?>
+ <resources>
+ 
+     <dimen name="code_text_size">8sp</dimen>
++    <dimen name="activity_horizontal_margin">16dp</dimen>
++    <dimen name="activity_vertical_margin">16dp</dimen>
++
+ </resources>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index f9c2022..6ed8d78 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -8,4 +8,8 @@
+         <item quantity="one">%d line</item>
+         <item quantity="other">%d lines</item>
+     </plurals>
++
++    <string name="title_activity_dummy_main">DummyMainActivity</string>
++    <string name="demo">View a demo!</string>
++
+ </resources>
+diff --git a/src/com/scottbezek/superdiff/DummyMainActivity.java b/src/com/scottbezek/superdiff/DummyMainActivity.java
+new file mode 100644
+index 0000000..284061b
+--- /dev/null
++++ b/src/com/scottbezek/superdiff/DummyMainActivity.java
+@@ -0,0 +1,28 @@
++package com.scottbezek.superdiff;
++
++import android.app.Activity;
++import android.content.Intent;
++import android.os.Bundle;
++import android.view.View;
++import android.view.View.OnClickListener;
++import android.widget.Button;
++
++public class DummyMainActivity extends Activity {
++
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        setContentView(R.layout.activity_dummy_main);
++
++        final Button demoButton = (Button)findViewById(R.id.button_demo);
++        demoButton.setOnClickListener(new OnClickListener() {
++
++            @Override
++            public void onClick(View v) {
++                Intent intent = new Intent(DummyMainActivity.this, ListViewActivity.class);
++                startActivity(intent);
++            }
++        });
++    }
++
++}
+diff --git a/src/com/scottbezek/superdiff/ListViewActivity.java b/src/com/scottbezek/superdiff/ListViewActivity.java
+index f7cddda..8724e45 100644
+--- a/src/com/scottbezek/superdiff/ListViewActivity.java
++++ b/src/com/scottbezek/superdiff/ListViewActivity.java
+@@ -1,10 +1,14 @@
+ package com.scottbezek.superdiff;
+ 
++import java.io.FileNotFoundException;
++import java.io.InputStream;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.List;
++import java.util.Scanner;
+ 
+ import android.app.Activity;
++import android.content.Intent;
+ import android.content.res.Resources;
+ import android.graphics.Paint;
+ import android.graphics.Typeface;
+@@ -55,7 +59,19 @@ public class ListViewActivity extends Activity {
+                 findViewById(R.id.content_view);
+ 
+         // TODO(sbezek): move to a loader
+-        List<CollapsedOrLine> diff = getDiff(getResources());
++        final List<CollapsedOrLine> diff;
++        final Intent intent = getIntent();
++        if (intent.getData() == null) {
++            diff = getCollapsedDiff(DummyContent.getScanner(getResources(), R.raw.sample_view_diff));
++        } else {
++            try {
++                InputStream diffInput = getContentResolver().openInputStream(intent.getData());
++                diff = getCollapsedDiff(new Scanner(diffInput));
++            } catch (FileNotFoundException e) {
++                // TODO(sbezek): handle load failure reasonably once this is in a loader
++                throw new RuntimeException(e);
++            }
++        }
+ 
+         StopWatch itemWidthTimer = StopWatch.start("calculate_item_widths");
+         mItemWidthInfo = calculateItemWidths(getResources(), diff);
+@@ -145,11 +161,11 @@ public class ListViewActivity extends Activity {
+     }
+ 
+ 
+-    private static List<CollapsedOrLine> getDiff(Resources resources) {
++    private static List<CollapsedOrLine> getCollapsedDiff(Scanner diff) {
+         Parser parser = new Parser(System.out);
+         SingleFileDiff d;
+         try {
+-            d = parser.parse(DummyContent.getScanner(resources, R.raw.sample_view_diff));
++            d = parser.parse(diff);
+         } catch (DiffParseException e) {
+             // TODO(sbezek): handle this reasonably once diff parsing is factored out of here
+             throw new RuntimeException(e);
+diff --git a/src/com/scottbezek/superdiff/list/CollapsedSideBySideLineAdapter.java b/src/com/scottbezek/superdiff/list/CollapsedSideBySideLineAdapter.java
+index 4381eca..74e57c7 100644
+--- a/src/com/scottbezek/superdiff/list/CollapsedSideBySideLineAdapter.java
++++ b/src/com/scottbezek/superdiff/list/CollapsedSideBySideLineAdapter.java
+@@ -5,6 +5,7 @@ import java.util.List;
+ import java.util.Set;
+ 
+ import javax.annotation.CheckForNull;
++import javax.annotation.concurrent.Immutable;
+ 
+ import android.content.res.Resources;
+ import android.view.LayoutInflater;
+@@ -131,6 +132,26 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
+         return 2;
+     }
+ 
++    @Immutable
++    public static class SingleFileDiffData {
++
++        private final List<CollapsedOrLine> mItems;
++        private final ItemWidths mItemWidthInfo;
++
++        public SingleFileDiffData(List<CollapsedOrLine> items, ItemWidths itemWidthInfo) {
++            mItems = items;
++            mItemWidthInfo = itemWidthInfo;
++        }
++
++        public List<CollapsedOrLine> getItems() {
++            return mItems;
++        }
++
++        public ItemWidths getitemWidths() {
++            return mItemWidthInfo;
++        }
++    }
++
+     /**
+      * A collapsed section of the diff.
+      */
+diff --git a/src/com/scottbezek/superdiff/list/HorizontalScrollObservingListView.java b/src/com/scottbezek/superdiff/list/HorizontalScrollObservingListView.java
+index ab06177..e77c121 100644
+--- a/src/com/scottbezek/superdiff/list/HorizontalScrollObservingListView.java
++++ b/src/com/scottbezek/superdiff/list/HorizontalScrollObservingListView.java
+@@ -20,10 +20,14 @@ import com.scottbezek.util.Assert;
+ 
+ /**
+  * ListView that scrolls vertically normally, but allows pseudo scrolling
+- * horizontally simultaneously. The horizontal pseudo-scrolling don't directly
++ * horizontally simultaneously. The horizontal pseudo-scrolling doesn't directly
+  * affect any views in the list; instead you can specify the horizontal scroll
+  * range and register for horizontal scroll change events and then use those to
+  * adjust views inside the list.
++ * <p>
++ * This must be done at the ListView level, because any child view would
++ * otherwise have its touches intercepted by the parent ListView whenever
++ * there's a large enough vertical component.
+  */
+ public class HorizontalScrollObservingListView extends ListView implements HorizontalScrollController {
+ 
+diff --git a/src/com/scottbezek/superdiff/unified/SingleFileDiff.java b/src/com/scottbezek/superdiff/unified/SingleFileDiff.java
+index cb9811c..f4b37bf 100644
+--- a/src/com/scottbezek/superdiff/unified/SingleFileDiff.java
++++ b/src/com/scottbezek/superdiff/unified/SingleFileDiff.java
+@@ -8,7 +8,6 @@ import com.scottbezek.superdiff.unified.Parser.DiffParseException;
+ 
+ public class SingleFileDiff {
+ 
+-    @SuppressWarnings("unused") // TODO(sbezek): these should maybe be moved elsewhere?
+     private final String mLeftFilename, mRightFilename;
+ 
+     private final List<Chunk> mChunks;
+@@ -23,6 +22,22 @@ public class SingleFileDiff {
+         return mChunks;
+     }
+ 
++    public String getDisplayFileName() {
++        if (mLeftFilename.equals("/dev/null")) {
++            if (mRightFilename.startsWith("b/")) {
++                return mRightFilename.substring(2);
++            } else {
++                return mRightFilename;
++            }
++        } else {
++            if (mLeftFilename.startsWith("a/")) {
++                return mLeftFilename.substring(2);
++            } else {
++                return mLeftFilename;
++            }
++        }
++    }
++
+     public static class Builder {
+ 
+         private String mLeftFilename = null;

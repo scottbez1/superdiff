@@ -8,10 +8,16 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".DummyMainActivity" >
 
-    <Button
-        android:id="@+id/button_demo"
+    <Spinner
+        android:id="@+id/sample_selector"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/demo" />
+        />
+    <Button
+        android:id="@+id/button_view_sample"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/sample_selector"
+        android:text="@string/view_sample" />
 
 </RelativeLayout>
