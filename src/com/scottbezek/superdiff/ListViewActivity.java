@@ -4,7 +4,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import android.app.Activity;
@@ -22,9 +25,9 @@ import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
 import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedUnknown;
 import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
+import com.scottbezek.superdiff.list.MultiFileDiffAdapter;
 import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
 import com.scottbezek.superdiff.unified.Chunk;
-import com.scottbezek.superdiff.unified.ILineReader;
 import com.scottbezek.superdiff.unified.Parser;
 import com.scottbezek.superdiff.unified.Parser.DiffParseException;
 import com.scottbezek.superdiff.unified.SideBySideLine;
@@ -33,8 +36,6 @@ import com.scottbezek.util.Assert;
 import com.scottbezek.util.StopWatch;
 
 public class ListViewActivity extends Activity {
-
-    private static final String TAG = ListViewActivity.class.getName();
 
     public static final String EXTRA_SAMPLE = "EXTRA_SAMPLE";
 
@@ -60,7 +61,7 @@ public class ListViewActivity extends Activity {
                 findViewById(R.id.content_view);
 
         // TODO(sbezek): move to a loader
-        final List<CollapsedOrLine> diff;
+        final Map<String, List<CollapsedOrLine>> diffByFilename;
         final Intent intent = getIntent();
         final Uri dataUri = intent.getData();
         if (dataUri == null && !intent.hasExtra(EXTRA_SAMPLE)) {
@@ -89,7 +90,7 @@ public class ListViewActivity extends Activity {
                 }
             }
             try {
-                diff = getCollapsedDiff(new Scanner(diffInput));
+                diffByFilename = getCollapsedDiffs(new Scanner(diffInput));
             } catch (DiffParseException e) {
                 // TODO(sbezek): handle load failure reasonably once this is in a loader
                 throw new RuntimeException(e);
@@ -97,38 +98,62 @@ public class ListViewActivity extends Activity {
         }
 
         StopWatch itemWidthTimer = StopWatch.start("calculate_item_widths");
-        mItemWidthInfo = calculateItemWidths(getResources(), diff);
+        // For now we only support a single horizontally-scrollable container
+        // (in the future it might be nice to allow each file to be scrolled
+        // separately), so just take the max widths of all file diffs
+        int widestLineNumberWidth = 0;
+        int widestLineContentsWidth = 0;
+        for (List<CollapsedOrLine> fileDiff : diffByFilename.values()) {
+            ItemWidths curItemWidths = calculateItemWidths(getResources(), fileDiff);
+            if (curItemWidths.getLineNumberWidthPx() > widestLineNumberWidth) {
+                widestLineNumberWidth = curItemWidths.getLineNumberWidthPx();
+            }
+            if (curItemWidths.getLineContentsWidthPx() > widestLineContentsWidth) {
+                widestLineContentsWidth = curItemWidths.getLineContentsWidthPx();
+            }
+        }
+        mItemWidthInfo = new ItemWidths(widestLineNumberWidth, widestLineContentsWidth);
         itemWidthTimer.stopAndLog();
 
-        mListView.setAdapter(new CollapsedSideBySideLineAdapter(diff, mItemWidthInfo, mListView));
+        List<CollapsedSideBySideLineAdapter> adapters = new ArrayList<CollapsedSideBySideLineAdapter>();
+        for (Entry<String, List<CollapsedOrLine>> entry : diffByFilename.entrySet()) {
+            adapters.add(new CollapsedSideBySideLineAdapter(entry.getKey(),
+                    entry.getValue(), mItemWidthInfo, mListView));
+        }
+        mListView.setAdapter(new MultiFileDiffAdapter(adapters));
 
         // If the listview changes dimensions (including the initial layout), we
         // need to recalculate the horizontal scroll range.
         mListView.addOnLayoutChangeListener(mListviewLayoutChangeListener);
     }
 
-    private static List<CollapsedOrLine> getCollapsedDiff(
+    private static Map<String, List<CollapsedOrLine>> getCollapsedDiffs(
             Scanner unifiedDiffFileContents) throws DiffParseException {
-        Parser parser = new Parser(System.out);
-        SingleFileDiff d = parser.parse(unifiedDiffFileContents).get(0);
+        final Map<String, List<CollapsedOrLine>> collapsedDiffByFilename =
+                new HashMap<String, List<CollapsedOrLine>>();
 
-        List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
+        final List<SingleFileDiff> fileDiffs = new Parser(System.out)
+                .parse(unifiedDiffFileContents);
+        for (SingleFileDiff d : fileDiffs) {
+            List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
 
-        int curLeftLine = 1;
-        for (Chunk chunk : d.getChunks()) {
-            final int leftStartLine = chunk.getLeftStartLine();
-            if (leftStartLine > curLeftLine) {
-                items.add(CollapsedOrLine.of(new CollapsedUnknown(leftStartLine - curLeftLine)));
-            }
-            for (SideBySideLine line : chunk.getLines()) {
-                items.add(CollapsedOrLine.of(line));
-                if (line.getLeftLine() != null) {
-                    curLeftLine++;
+            int curLeftLine = 1;
+            for (Chunk chunk : d.getChunks()) {
+                final int leftStartLine = chunk.getLeftStartLine();
+                if (leftStartLine > curLeftLine) {
+                    items.add(CollapsedOrLine.of(new CollapsedUnknown(leftStartLine - curLeftLine)));
+                }
+                for (SideBySideLine line : chunk.getLines()) {
+                    items.add(CollapsedOrLine.of(line));
+                    if (line.getLeftLine() != null) {
+                        curLeftLine++;
+                    }
                 }
             }
+            collapsedDiffByFilename.put(d.getDisplayFileName(), items);
         }
 
-        return items;
+        return collapsedDiffByFilename;
     }
 
     private static ItemWidths calculateItemWidths(Resources resources, List<CollapsedOrLine> diff) {
@@ -183,20 +208,5 @@ public class ListViewActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         return false;
-    }
-
-    private static class ArrayReader implements ILineReader {
-
-        private final String[] mLines;
-        private int mCurrentLine = 0;
-
-        public ArrayReader(String[] lines) {
-            mLines = lines;
-        }
-
-        @Override
-        public String consumeLine() {
-            return mLines[mCurrentLine++];
-        }
     }
 }

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <color name="collapsed_background">#171812</color>
+    <color name="file_title_background">#434A89</color>
+    <color name="file_title_foreground">#d1d4cf</color>
+    
+    <color name="collapsed_background">#20201A</color>
     <color name="collapsed_foreground">#d1d4cf</color>
     
     <color name="diff_foreground">#D8E3CC</color>

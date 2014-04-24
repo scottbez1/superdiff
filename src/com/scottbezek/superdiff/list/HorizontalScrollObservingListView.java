@@ -8,7 +8,6 @@ import javax.annotation.Nonnull;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
@@ -30,8 +29,6 @@ import com.scottbezek.util.Assert;
  * there's a large enough vertical component.
  */
 public class HorizontalScrollObservingListView extends ListView implements HorizontalScrollController {
-
-    private static final String TAG = HorizontalScrollObservingListView.class.getName();
 
     private final OverScroller mScroller;
     private final int mTouchSlop;
@@ -116,7 +113,6 @@ public class HorizontalScrollObservingListView extends ListView implements Horiz
     }
 
     private void onHorizontalScrollChanged(int newX, int oldX) {
-        Log.d(TAG, "Horizontal scroll from " + oldX + " to " + newX);
         Assert.mainThreadOnly();
         for (HorizontalScrollListener listener : mScrollListeners) {
             listener.onHorizontalScroll(newX, oldX);

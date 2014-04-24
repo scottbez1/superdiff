@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 import android.content.res.Resources;
@@ -23,6 +24,7 @@ import com.scottbezek.util.Assert;
 
 public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
+    private final String mFilename;
     private final List<CollapsedOrLine> mItems;
     private final ItemWidths mItemWidthInfo;
     private final HorizontalScrollController mScrollController;
@@ -53,9 +55,11 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
         }
     };
 
-    public CollapsedSideBySideLineAdapter(List<CollapsedOrLine> items,
-            ItemWidths itemWidthInfo,
-            HorizontalScrollController scrollController) {
+    public CollapsedSideBySideLineAdapter(@Nonnull String filename,
+            @Nonnull List<CollapsedOrLine> items,
+            @Nonnull ItemWidths itemWidthInfo,
+            @Nonnull HorizontalScrollController scrollController) {
+        mFilename = filename;
         mItems = items;
         mItemWidthInfo = itemWidthInfo;
         mScrollController = scrollController;
@@ -64,12 +68,12 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return mItems.size();
+        return 1 + mItems.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return mItems.get(position);
+        return mItems.get(position - 1);
     }
 
     @Override
@@ -79,12 +83,28 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        if (position == 0) {
+            return getFileTitleView(convertView, parent);
+        }
+
         CollapsedOrLine item = (CollapsedOrLine)getItem(position);
         if (item.isCollapsed()) {
             return getCollapsedView(item.getCollapsed(), convertView, parent);
         } else {
             return getLineView(item.getLine(), convertView, parent);
         }
+    }
+
+    private View getFileTitleView(View convertView, ViewGroup parent) {
+        if (convertView == null) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            convertView = inflater.inflate(R.layout.file_title_line_item, parent, false);
+        }
+
+        final TextView fileTitle = (TextView)convertView.findViewById(R.id.file_title);
+        fileTitle.setText(mFilename);
+
+        return convertView;
     }
 
     private View getLineView(SideBySideLine line, View convertView, ViewGroup parent) {
@@ -111,14 +131,19 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
         final Resources resources = parent.getContext().getResources();
 
-        final TextView dummyText = (TextView)convertView.findViewById(R.id.dummy_text_view);
-        dummyText.setText(resources.getQuantityString(R.plurals.collapsed_lines, collapsed.size(), collapsed.size()));
+        final TextView dummyText = (TextView)convertView.findViewById(R.id.collapsed_line_count);
+        dummyText.setText(resources.getQuantityString(
+                R.plurals.collapsed_lines, collapsed.size(), collapsed.size()));
 
         return convertView;
     }
 
     @Override
     public int getItemViewType(int position) {
+        if (position == 0) {
+            // File title row
+            return 2;
+        }
         CollapsedOrLine item = (CollapsedOrLine)getItem(position);
         if (item.isCollapsed()) {
             return 0;
@@ -129,7 +154,7 @@ public class CollapsedSideBySideLineAdapter extends BaseAdapter {
 
     @Override
     public int getViewTypeCount() {
-        return 2;
+        return 3;
     }
 
     @Immutable

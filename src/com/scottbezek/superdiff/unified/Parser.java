@@ -87,6 +87,7 @@ public class Parser {
                         int rightStartLine = Integer.parseInt(chunkHeader.group(3));
                         int rightLength = Integer.parseInt(chunkHeader.group(4));
 
+                        @SuppressWarnings("unused")
                         String chunkContextSnippet = chunkHeader.group(5);
 
                         chunkBuilder = new Chunk.Builder(leftStartLine, leftLength, rightStartLine, rightLength);
