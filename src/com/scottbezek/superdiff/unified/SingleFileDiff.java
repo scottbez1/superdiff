@@ -61,6 +61,10 @@ public class SingleFileDiff {
             return this;
         }
 
+        public boolean isPotentiallyComplete() {
+            return mLeftFilename != null && mRightFilename != null;
+        }
+
         public Builder addChunk(Chunk chunk) throws DiffParseException {
             // XXX assert that the difference in this chunk's start lines is equal to the cumulative chunk length difference so far
 

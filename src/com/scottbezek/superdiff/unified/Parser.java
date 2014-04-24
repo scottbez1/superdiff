@@ -1,6 +1,8 @@
 package com.scottbezek.superdiff.unified;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,16 +30,18 @@ public class Parser {
         mDebugStream = debugOutput;
     }
 
-    public SingleFileDiff parse(Scanner input) throws DiffParseException {
-        SingleFileDiff.Builder builder = new SingleFileDiff.Builder();
+    public List<SingleFileDiff> parse(Scanner input) throws DiffParseException {
+        final List<SingleFileDiff> fileDiffs = new ArrayList<SingleFileDiff>();
+
+        SingleFileDiff.Builder currentFileBuilder = new SingleFileDiff.Builder();
         Chunk.Builder chunkBuilder = null;
 
-        Matcher headerLeftFile = HEADER_LEFT_FILE.matcher("");
-        Matcher headerRightFile = HEADER_RIGHT_FILE.matcher("");
-        Matcher chunkHeader = CHUNK.matcher("");
+        final Matcher headerLeftFile = HEADER_LEFT_FILE.matcher("");
+        final Matcher headerRightFile = HEADER_RIGHT_FILE.matcher("");
+        final Matcher chunkHeader = CHUNK.matcher("");
 
         while (input.hasNextLine()) {
-            String line = input.nextLine();
+            final String line = input.nextLine();
             if (chunkBuilder != null) {
                 switch(line.charAt(0)) {
                 case ' ':
@@ -53,18 +57,26 @@ public class Parser {
                     throw new DiffParseException("Expected a line diff, but instead got:" + line);
                 }
                 if (chunkBuilder.isComplete()) {
-                    builder.addChunk(chunkBuilder.build());
+                    currentFileBuilder.addChunk(chunkBuilder.build());
                     chunkBuilder = null;
                 }
             } else {
                 headerLeftFile.reset(line);
                 if (headerLeftFile.matches()) {
-                    builder.setLeftFilename(headerLeftFile.group(1));
+                    if (currentFileBuilder.isPotentiallyComplete()) {
+                        fileDiffs.add(currentFileBuilder.build());
+                        currentFileBuilder = new SingleFileDiff.Builder();
+                    }
+                    currentFileBuilder.setLeftFilename(headerLeftFile.group(1));
                     continue;
                 }
                 headerRightFile.reset(line);
                 if (headerRightFile.matches()) {
-                    builder.setRightFilename(headerRightFile.group(1));
+                    if (currentFileBuilder.isPotentiallyComplete()) {
+                        fileDiffs.add(currentFileBuilder.build());
+                        currentFileBuilder = new SingleFileDiff.Builder();
+                    }
+                    currentFileBuilder.setRightFilename(headerRightFile.group(1));
                     continue;
                 }
                 chunkHeader.reset(line);
@@ -87,7 +99,8 @@ public class Parser {
             }
         }
 
-        return builder.build();
+        fileDiffs.add(currentFileBuilder.build());
+        return fileDiffs;
     }
 
     public static class DiffParseException extends Exception {

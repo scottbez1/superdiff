@@ -110,7 +110,7 @@ public class ListViewActivity extends Activity {
     private static List<CollapsedOrLine> getCollapsedDiff(
             Scanner unifiedDiffFileContents) throws DiffParseException {
         Parser parser = new Parser(System.out);
-        SingleFileDiff d = parser.parse(unifiedDiffFileContents);
+        SingleFileDiff d = parser.parse(unifiedDiffFileContents).get(0);
 
         List<CollapsedOrLine> items = new ArrayList<CollapsedOrLine>();
 
