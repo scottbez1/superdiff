@@ -14,7 +14,7 @@ public class Parser {
 
     private static final Pattern HEADER_LEFT_FILE = Pattern.compile("^--- " + FILENAME_PATTERN);
     private static final Pattern HEADER_RIGHT_FILE = Pattern.compile("^\\+\\+\\+ " + FILENAME_PATTERN);
-    private static final Pattern CHUNK = Pattern.compile("^@@ -" + RANGE + " \\+" + RANGE + " @@");
+    private static final Pattern CHUNK = Pattern.compile("^@@ -" + RANGE + " \\+" + RANGE + " @@(?: (.*))?");
 //
 //    // Additional syntax defined by git-diff. http://git-scm.com/docs/git-diff
 //    private static final Pattern GIT_DIFF_CMD = Pattern.compile("^diff");
@@ -86,6 +86,8 @@ public class Parser {
                         int leftLength = Integer.parseInt(chunkHeader.group(2));
                         int rightStartLine = Integer.parseInt(chunkHeader.group(3));
                         int rightLength = Integer.parseInt(chunkHeader.group(4));
+
+                        String chunkContextSnippet = chunkHeader.group(5);
 
                         chunkBuilder = new Chunk.Builder(leftStartLine, leftLength, rightStartLine, rightLength);
                         continue;
