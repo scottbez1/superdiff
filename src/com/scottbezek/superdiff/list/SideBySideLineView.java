@@ -4,11 +4,17 @@ import javax.annotation.concurrent.Immutable;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.BackgroundColorSpan;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.scottbezek.superdiff.R;
+import com.scottbezek.superdiff.diffcompute.DiffCatalog;
+import com.scottbezek.superdiff.diffcompute.LcsDiff;
+import com.scottbezek.superdiff.diffcompute.Region;
 import com.scottbezek.superdiff.unified.SideBySideLine;
 import com.scottbezek.util.Assert;
 
@@ -18,6 +24,8 @@ public class SideBySideLineView extends LinearLayout {
     private final int mEmptyBackgroundColor;
     private final int mRemovedBackgroundColor;
     private final int mAddedBackgroundColor;
+    private final int mRemovedCharactersBackgroundColor;
+    private final int mAddedCharactersBackgroundColor;
 
     private final View mLeftContainer;
     private final TextView mLeftLineNumber;
@@ -44,26 +52,14 @@ public class SideBySideLineView extends LinearLayout {
         mEmptyBackgroundColor = resources.getColor(R.color.diff_line_empty_background);
         mRemovedBackgroundColor = resources.getColor(R.color.diff_line_removed_background);
         mAddedBackgroundColor = resources.getColor(R.color.diff_line_added_background);
+
+        mRemovedCharactersBackgroundColor = resources.getColor(R.color.diff_chars_removed_background);
+        mAddedCharactersBackgroundColor = resources.getColor(R.color.diff_chars_added_background);
     }
 
     public void setLine(SideBySideLine line) {
         String leftLine = line.getLeftLine();
         String rightLine = line.getRightLine();
-        if (leftLine != null) {
-            mLeftLineNumber.setText(String.valueOf(line.getLeftLineNumber()));
-            mLeftContents.setText(leftLine);
-        } else {
-            mLeftLineNumber.setText("");
-            mLeftContents.setText("");
-        }
-
-        if (rightLine != null) {
-            mRightLineNumber.setText(String.valueOf(line.getRightLineNumber()));
-            mRightContents.setText(rightLine);
-        } else {
-            mRightLineNumber.setText("");
-            mRightContents.setText("");
-        }
 
         final int leftBackgroundColor;
         final int rightBackgroundColor;
@@ -86,9 +82,44 @@ public class SideBySideLineView extends LinearLayout {
         } else {
             throw Assert.fail("diff line has neither left nor right");
         }
-
         mLeftContents.setBackgroundColor(leftBackgroundColor);
         mRightContents.setBackgroundColor(rightBackgroundColor);
+
+        Spannable leftSpan = null;
+        Spannable rightSpan = null;
+        if (leftLine != null) {
+            leftSpan = new SpannableString(leftLine);
+        }
+        if (rightLine != null) {
+            rightSpan = new SpannableString(rightLine);
+        }
+
+        if (leftLine != null && rightLine != null) {
+            LcsDiff diffCalc = new LcsDiff();
+            DiffCatalog diff = diffCalc.computeDiff(leftLine, rightLine);
+            for (Region r : diff.getLeftUniqueRegions()) {
+                leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor), r.getStart(), r.getStart() + r.getLength(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            for (Region r : diff.getRightUniqueRegions()) {
+                rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor), r.getStart(), r.getStart() + r.getLength(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+        }
+
+        if (leftLine != null) {
+            mLeftLineNumber.setText(String.valueOf(line.getLeftLineNumber()));
+            mLeftContents.setText(leftSpan);
+        } else {
+            mLeftLineNumber.setText("");
+            mLeftContents.setText("");
+        }
+
+        if (rightLine != null) {
+            mRightLineNumber.setText(String.valueOf(line.getRightLineNumber()));
+            mRightContents.setText(rightSpan);
+        } else {
+            mRightLineNumber.setText("");
+            mRightContents.setText("");
+        }
     }
 
     public void setItemWidths(ItemWidths widths) {
