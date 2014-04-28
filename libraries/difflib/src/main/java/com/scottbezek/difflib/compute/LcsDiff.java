@@ -1,5 +1,7 @@
 package com.scottbezek.difflib.compute;
 
+import com.scottbezek.difflib.UnicodeUtil;
+
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +20,8 @@ public class LcsDiff {
     }
 
     public DiffCatalog computeDiff(String leftString, String rightString) {
-        final BreakIterator breakIterator = BreakIterator.getCharacterInstance(mLocale);
-        final List<String> left = getNaturalBreaks(breakIterator, leftString);
-        final List<String> right = getNaturalBreaks(breakIterator, rightString);
+        final List<String> left = UnicodeUtil.splitNaturalCharacters(leftString, mLocale);
+        final List<String> right = UnicodeUtil.splitNaturalCharacters(rightString, mLocale);
 
         int[][] lcsLengthTable = computeLcsLengthTable(left, right);
 
@@ -63,16 +64,4 @@ public class LcsDiff {
             diffOutput.addLeftUniqueRegion(new Region(absoluteCharsI - leftItem.length(), leftItem.length()));
         }
     }
-
-    private static List<String> getNaturalBreaks(BreakIterator breakIterator, String s) {
-        List<String> result = new ArrayList<String>();
-        breakIterator.setText(s);
-        int start = breakIterator.first();
-        for (int end = breakIterator.next(); end != BreakIterator.DONE; start = end, end = breakIterator.next()) {
-            result.add(s.substring(start, end));
-        }
-        return result;
-    }
-
-
 }
