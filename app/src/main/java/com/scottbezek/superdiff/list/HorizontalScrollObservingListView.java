@@ -1,10 +1,5 @@
 package com.scottbezek.superdiff.list;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.annotation.Nonnull;
-
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
@@ -15,7 +10,13 @@ import android.view.ViewParent;
 import android.widget.ListView;
 import android.widget.OverScroller;
 
+import com.scottbezek.util.AndroidAssert;
 import com.scottbezek.util.Assert;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 /**
  * ListView that scrolls vertically normally, but allows pseudo scrolling
@@ -87,33 +88,33 @@ public class HorizontalScrollObservingListView extends ListView implements Horiz
 
     @Override
     public void setHorizontalScrollRange(int range) {
-        Assert.mainThreadOnly();
+        AndroidAssert.mainThreadOnly();
         mScrollRange = range;
         // TODO(sbezek): need to adjust mScrollX here?
     }
 
     @Override
     public void registerHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
-        Assert.mainThreadOnly();
+        AndroidAssert.mainThreadOnly();
         Assert.notNull(listener);
         Assert.isTrue(mScrollListeners.add(listener));
     }
 
     @Override
     public void unregisterHorizontalScrollListener(@Nonnull HorizontalScrollListener listener) {
-        Assert.mainThreadOnly();
+        AndroidAssert.mainThreadOnly();
         Assert.notNull(listener);
         Assert.isTrue(mScrollListeners.remove(listener));
     }
 
     @Override
     public int getHorizontalScrollPosition() {
-        Assert.mainThreadOnly();
+        AndroidAssert.mainThreadOnly();
         return mScrollX;
     }
 
     private void onHorizontalScrollChanged(int newX, int oldX) {
-        Assert.mainThreadOnly();
+        AndroidAssert.mainThreadOnly();
         for (HorizontalScrollListener listener : mScrollListeners) {
             listener.onHorizontalScroll(newX, oldX);
         }
