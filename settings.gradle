@@ -1,1 +1,1 @@
-include ':app', ':libraries:difflib'
+include ':app', ':libraries:difflib', ':libraries:util'

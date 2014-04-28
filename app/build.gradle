@@ -22,6 +22,7 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:1.3.9'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':libraries:difflib')
+    compile project(':libraries:util')
 }
 
 

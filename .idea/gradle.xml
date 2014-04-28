@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/libraries" />
             <option value="$PROJECT_DIR$/libraries/difflib" />
+            <option value="$PROJECT_DIR$/libraries/util" />
           </set>
         </option>
       </GradleProjectSettings>
