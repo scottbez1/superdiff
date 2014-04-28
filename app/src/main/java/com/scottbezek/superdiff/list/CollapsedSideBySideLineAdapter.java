@@ -19,7 +19,7 @@ import android.widget.TextView;
 import com.scottbezek.superdiff.R;
 import com.scottbezek.superdiff.list.HorizontalScrollObservingListView.HorizontalScrollListener;
 import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
-import com.scottbezek.superdiff.unified.SideBySideLine;
+import com.scottbezek.difflib.unified.SideBySideLine;
 import com.scottbezek.util.Assert;
 
 public class CollapsedSideBySideLineAdapter extends BaseAdapter {

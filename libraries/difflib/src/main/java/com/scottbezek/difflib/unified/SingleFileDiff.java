@@ -1,10 +1,10 @@
-package com.scottbezek.superdiff.unified;
+package com.scottbezek.difflib.unified;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.scottbezek.superdiff.unified.Parser.DiffParseException;
+import com.scottbezek.difflib.unified.Parser.DiffParseException;
 
 public class SingleFileDiff {
 

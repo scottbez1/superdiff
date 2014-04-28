@@ -1,4 +1,4 @@
-package com.scottbezek.superdiff.unified;
+package com.scottbezek.difflib.unified;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
-import com.scottbezek.superdiff.unified.Chunk.Block.Delta;
-import com.scottbezek.superdiff.unified.Chunk.Block.Unchanged;
-import com.scottbezek.superdiff.unified.Parser.DiffParseException;
+import com.scottbezek.difflib.unified.Chunk.Block.Delta;
+import com.scottbezek.difflib.unified.Chunk.Block.Unchanged;
+import com.scottbezek.difflib.unified.Parser.DiffParseException;
 import com.scottbezek.util.Assert;
 
 @Immutable

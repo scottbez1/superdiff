@@ -12,10 +12,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.scottbezek.superdiff.R;
-import com.scottbezek.superdiff.diffcompute.DiffCatalog;
-import com.scottbezek.superdiff.diffcompute.LcsDiff;
-import com.scottbezek.superdiff.diffcompute.Region;
-import com.scottbezek.superdiff.unified.SideBySideLine;
+import com.scottbezek.difflib.compute.DiffCatalog;
+import com.scottbezek.difflib.compute.LcsDiff;
+import com.scottbezek.difflib.compute.Region;
+import com.scottbezek.difflib.unified.SideBySideLine;
 import com.scottbezek.util.Assert;
 
 public class SideBySideLineView extends LinearLayout {

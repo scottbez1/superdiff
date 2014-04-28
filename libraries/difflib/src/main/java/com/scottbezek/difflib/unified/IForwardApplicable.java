@@ -1,4 +1,4 @@
-package com.scottbezek.superdiff.unified;
+package com.scottbezek.difflib.unified;
 
 import java.util.List;
 

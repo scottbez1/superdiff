@@ -1,4 +1,4 @@
-package com.scottbezek.superdiff.diffcompute;
+package com.scottbezek.difflib.compute;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;

@@ -27,11 +27,11 @@ import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedUnk
 import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
 import com.scottbezek.superdiff.list.MultiFileDiffAdapter;
 import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
-import com.scottbezek.superdiff.unified.Chunk;
-import com.scottbezek.superdiff.unified.Parser;
-import com.scottbezek.superdiff.unified.Parser.DiffParseException;
-import com.scottbezek.superdiff.unified.SideBySideLine;
-import com.scottbezek.superdiff.unified.SingleFileDiff;
+import com.scottbezek.difflib.unified.Chunk;
+import com.scottbezek.difflib.unified.Parser;
+import com.scottbezek.difflib.unified.Parser.DiffParseException;
+import com.scottbezek.difflib.unified.SideBySideLine;
+import com.scottbezek.difflib.unified.SingleFileDiff;
 import com.scottbezek.util.Assert;
 import com.scottbezek.util.StopWatch;
 
