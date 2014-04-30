@@ -3,12 +3,25 @@ package com.scottbezek.difflib;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 
 public class UnicodeUtilTest {
+
+    @Test
+    public void testSplitNaturalCharactersEmpty() throws Exception {
+        List<String> expected = Collections.emptyList();
+        assertEquals(expected, UnicodeUtil.splitNaturalCharacters("", Locale.US));
+    }
+
+    @Test
+    public void testSplitNaturalCharactersSingle() throws Exception {
+        List<String> expected = Arrays.asList("a");
+        assertEquals(expected, UnicodeUtil.splitNaturalCharacters("a", Locale.US));
+    }
 
     @Test
     public void testSplitNaturalCharactersSimple() throws Exception {
