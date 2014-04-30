@@ -25,7 +25,7 @@ public class LevenshteinDiff<Element> {
 
     private float[][] mCostTable = null;
 
-    private EditType[][] mEditTypeTable = null;
+    private Edit[][] mEditTypeTable = null;
 
     /**
      * Construct a LevenshteinDiff to compute the edit string (i.e. series of insertions,
@@ -73,21 +73,21 @@ public class LevenshteinDiff<Element> {
      */
     public LevenshteinDiff<Element> compute() {
         mCostTable = new float[mFirst.size() + 1][];
-        mEditTypeTable = new EditType[mFirst.size() + 1][];
+        mEditTypeTable = new Edit[mFirst.size() + 1][];
 
         /*
          * Initialize the upper row and left column, which correspond to initial deletions/insertions.
          */
         for (int i = 0; i <= mFirst.size(); i++) {
             mCostTable[i] = new float[mSecond.size() + 1];
-            mEditTypeTable[i] = new EditType[mSecond.size() + 1];
+            mEditTypeTable[i] = new Edit[mSecond.size() + 1];
 
             mCostTable[i][0] = i * mDeleteCost;
-            mEditTypeTable[i][0] = EditType.DELETE;
+            mEditTypeTable[i][0] = Edit.DELETE;
         }
         for (int j = 0; j <= mSecond.size(); j++) {
             mCostTable[0][j] = j * mInsertCost;
-            mEditTypeTable[0][j] = EditType.INSERT;
+            mEditTypeTable[0][j] = Edit.INSERT;
         }
 
         for (int i = 1; i <= mFirst.size(); i++) {
@@ -95,17 +95,17 @@ public class LevenshteinDiff<Element> {
                 final float deleteCost = mCostTable[i - 1][j] + mDeleteCost;
                 final float insertCost = mCostTable[i][j - 1] + mInsertCost;
                 final float replaceCost;
-                final EditType replaceType;
+                final Edit replaceType;
                 if (mFirst.get(i - 1).equals(mSecond.get(j - 1))) {
                     replaceCost = mCostTable[i - 1][j - 1] + 0f;
-                    replaceType = EditType.SAME;
+                    replaceType = Edit.SAME;
                 } else {
                     replaceCost = mCostTable[i - 1][j - 1] + mReplaceCost;
-                    replaceType = EditType.REPLACE;
+                    replaceType = Edit.REPLACE;
                 }
 
                 final float opCost;
-                final EditType opType;
+                final Edit opType;
 
                 // Prefer replace if costs are tied
                 if (replaceCost <= deleteCost && replaceCost <= insertCost) {
@@ -113,10 +113,10 @@ public class LevenshteinDiff<Element> {
                     opType = replaceType;
                 } else if (insertCost <= deleteCost) {
                     opCost = insertCost;
-                    opType = EditType.INSERT;
+                    opType = Edit.INSERT;
                 } else {
                     opCost = deleteCost;
-                    opType = EditType.DELETE;
+                    opType = Edit.DELETE;
                 }
 
                 mCostTable[i][j] = opCost;
@@ -130,16 +130,16 @@ public class LevenshteinDiff<Element> {
      * Retrieve the edit string for this diff. The diff must have already been computed by calling
      * {@link #compute()}.
      */
-    public List<EditType> getEditString() {
+    public List<Edit> getEditString() {
         if (mCostTable == null) {
             throw new IllegalStateException("Must compute the diff first");
         }
 
-        List<EditType> output = new ArrayList<EditType>();
+        List<Edit> output = new ArrayList<Edit>();
         int i = mFirst.size();
         int j = mSecond.size();
         while (i > 0 || j > 0) {
-            EditType editType = mEditTypeTable[i][j];
+            Edit editType = mEditTypeTable[i][j];
             output.add(editType);
             switch (editType) {
                 case INSERT:
@@ -261,21 +261,4 @@ public class LevenshteinDiff<Element> {
         }
     }
 
-    /**
-     * The type of a single operation that is part of the series of operations that transforms one
-     * sequence into another.
-     */
-    public enum EditType {
-        /** Element was inserted into the second sequence */
-        INSERT,
-
-        /** An element in the first sequence was replaced by an element in the second sequence */
-        REPLACE,
-
-        /** Element was deleted from the first sequence */
-        DELETE,
-
-        /** Element from the first sequence matches element from the second sequence */
-        SAME,
-    }
 }

@@ -18,14 +18,14 @@ public class LevenshteinDiffTest {
                 splitChars("sitting"))
                 .compute();
 
-        List<LevenshteinDiff.EditType> expected = Arrays.asList(
-                LevenshteinDiff.EditType.REPLACE,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.REPLACE,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.INSERT
+        List<Edit> expected = Arrays.asList(
+                Edit.REPLACE,
+                Edit.SAME,
+                Edit.SAME,
+                Edit.SAME,
+                Edit.REPLACE,
+                Edit.SAME,
+                Edit.INSERT
                 );
 
         assertEquals(expected, c.getEditString());
@@ -41,14 +41,14 @@ public class LevenshteinDiffTest {
                 .setReplaceCost(2f) // same as a delete+insert
                 .compute();
 
-        List<LevenshteinDiff.EditType> expected = Arrays.asList(
-                LevenshteinDiff.EditType.REPLACE,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.REPLACE,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.INSERT
+        List<Edit> expected = Arrays.asList(
+                Edit.REPLACE,
+                Edit.SAME,
+                Edit.SAME,
+                Edit.SAME,
+                Edit.REPLACE,
+                Edit.SAME,
+                Edit.INSERT
         );
 
         assertEquals(expected, c.getEditString());
@@ -64,16 +64,16 @@ public class LevenshteinDiffTest {
                 .setReplaceCost(2.001f) // replace is slightly more expensive than a delete + insert
                 .compute();
 
-        List<LevenshteinDiff.EditType> expected = Arrays.asList(
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.SAME,
-                LevenshteinDiff.EditType.INSERT
+        List<Edit> expected = Arrays.asList(
+                Edit.DELETE,
+                Edit.INSERT,
+                Edit.SAME,
+                Edit.SAME,
+                Edit.SAME,
+                Edit.DELETE,
+                Edit.INSERT,
+                Edit.SAME,
+                Edit.INSERT
         );
 
         assertEquals(expected, c.getEditString());
@@ -86,7 +86,7 @@ public class LevenshteinDiffTest {
                 Collections.<Character>emptyList())
                 .compute();
 
-        List<LevenshteinDiff.EditType> expected = Collections.emptyList();
+        List<Edit> expected = Collections.emptyList();
 
         assertEquals(expected, c.getEditString());
     }
@@ -98,13 +98,13 @@ public class LevenshteinDiffTest {
                 splitChars("foobar"))
                 .compute();
 
-        List<LevenshteinDiff.EditType> expected = Arrays.asList(
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.INSERT,
-                LevenshteinDiff.EditType.INSERT
+        List<Edit> expected = Arrays.asList(
+                Edit.INSERT,
+                Edit.INSERT,
+                Edit.INSERT,
+                Edit.INSERT,
+                Edit.INSERT,
+                Edit.INSERT
         );
 
         assertEquals(expected, c.getEditString());
@@ -118,13 +118,13 @@ public class LevenshteinDiffTest {
                 )
                 .compute();
 
-        List<LevenshteinDiff.EditType> expected = Arrays.asList(
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.DELETE,
-                LevenshteinDiff.EditType.DELETE
+        List<Edit> expected = Arrays.asList(
+                Edit.DELETE,
+                Edit.DELETE,
+                Edit.DELETE,
+                Edit.DELETE,
+                Edit.DELETE,
+                Edit.DELETE
         );
 
         assertEquals(expected, c.getEditString());

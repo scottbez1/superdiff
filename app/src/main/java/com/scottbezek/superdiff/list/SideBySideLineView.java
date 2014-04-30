@@ -2,7 +2,7 @@ package com.scottbezek.superdiff.list;
 
 import com.scottbezek.difflib.UnicodeUtil;
 import com.scottbezek.difflib.compute.LevenshteinDiff;
-import com.scottbezek.difflib.compute.LevenshteinDiff.EditType;
+import com.scottbezek.difflib.compute.Edit;
 import com.scottbezek.difflib.unified.SideBySideLine;
 import com.scottbezek.superdiff.R;
 import com.scottbezek.util.Assert;
@@ -102,7 +102,7 @@ public class SideBySideLineView extends LinearLayout {
             Locale locale = getResources().getConfiguration().locale;
             final List<String> leftElements = UnicodeUtil.splitNaturalCharacters(leftLine, locale);
             final List<String> rightElements = UnicodeUtil.splitNaturalCharacters(rightLine, locale);
-            List<EditType> editString = new LevenshteinDiff<String>(leftElements, rightElements)
+            List<Edit> editString = new LevenshteinDiff<String>(leftElements, rightElements)
                     .setReplaceCost(2f)
                     .compute()
                     .getEditString();
@@ -112,20 +112,20 @@ public class SideBySideLineView extends LinearLayout {
             final Iterator<String> rightIterator = rightElements.iterator();
             int leftCharIndex = 0;
             int rightCharIndex = 0;
-            for (EditType edit : editString) {
-                if (edit == EditType.DELETE) {
+            for (Edit edit : editString) {
+                if (edit == Edit.DELETE) {
                     final String leftElement = leftIterator.next();
                     leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
                             leftCharIndex, leftCharIndex + leftElement.length(),
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     leftCharIndex += leftElement.length();
-                } else if (edit == EditType.INSERT) {
+                } else if (edit == Edit.INSERT) {
                     final String rightElement = rightIterator.next();
                     rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
                             rightCharIndex, rightCharIndex + rightElement.length(),
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     rightCharIndex += rightElement.length();
-                } else if (edit == EditType.REPLACE) {
+                } else if (edit == Edit.REPLACE) {
                     final String leftElement = leftIterator.next();
                     leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
                             leftCharIndex, leftCharIndex + leftElement.length(),
@@ -137,7 +137,7 @@ public class SideBySideLineView extends LinearLayout {
                             rightCharIndex, rightCharIndex + rightElement.length(),
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     rightCharIndex += rightElement.length();
-                } else if (edit == EditType.SAME) {
+                } else if (edit == Edit.SAME) {
                     final String leftElement = leftIterator.next();
                     leftCharIndex += leftElement.length();
                     final String rightElement = rightIterator.next();
