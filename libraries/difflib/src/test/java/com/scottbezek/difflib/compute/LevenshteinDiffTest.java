@@ -36,6 +36,8 @@ public class LevenshteinDiffTest {
         LevenshteinDiff<Character> c = new LevenshteinDiff<Character>(
                 splitChars("kitten"),
                 splitChars("sitting"))
+                .setDeleteCost(1f)
+                .setInsertCost(1f)
                 .setReplaceCost(2f) // same as a delete+insert
                 .compute();
 
@@ -57,6 +59,8 @@ public class LevenshteinDiffTest {
         LevenshteinDiff<Character> c = new LevenshteinDiff<Character>(
                 splitChars("kitten"),
                 splitChars("sitting"))
+                .setDeleteCost(1f)
+                .setInsertCost(1f)
                 .setReplaceCost(2.001f) // replace is slightly more expensive than a delete + insert
                 .compute();
 

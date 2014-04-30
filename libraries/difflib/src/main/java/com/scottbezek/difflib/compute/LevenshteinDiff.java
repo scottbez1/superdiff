@@ -31,8 +31,9 @@ public class LevenshteinDiff<Element> {
      * Construct a LevenshteinDiff to compute the edit string (i.e. series of insertions,
      * deletions, replacements, and no-ops to transform one string into another).
      * <p/>
-     * Optionally adjust cost parameters via {@link #setInsertCost(float)}, {@link
-     * #setDeleteCost(float)}, {@link #setReplaceCost(float)} before calling {@link #compute()}.
+     * Cost parameters of operations may optionally be adjusted via {@link #setInsertCost(float)},
+     * {@link #setDeleteCost(float)}, {@link #setReplaceCost(float)} before calling {@link
+     * #compute()}.
      */
     public LevenshteinDiff(List<Element> first, List<Element> second) {
         mFirst = first;
@@ -155,13 +156,13 @@ public class LevenshteinDiff<Element> {
             }
         }
 
-        // Reverse the edit string since it was build by back-tracking through the table
+        // Reverse the edit string since it was built by back-tracking through the table
         Collections.reverse(output);
         return output;
     }
 
     /**
-     * Returns a printable representation of the computed cost table.
+     * Returns a printable representation of the computed cost table, for debugging.
      */
     String getDebugCostTable() {
         if (mCostTable == null) {
