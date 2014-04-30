@@ -1,6 +1,11 @@
 package com.scottbezek.superdiff.list;
 
-import javax.annotation.concurrent.Immutable;
+import com.scottbezek.difflib.UnicodeUtil;
+import com.scottbezek.difflib.compute.LevenshteinDiff;
+import com.scottbezek.difflib.compute.LevenshteinDiff.EditType;
+import com.scottbezek.difflib.unified.SideBySideLine;
+import com.scottbezek.superdiff.R;
+import com.scottbezek.util.Assert;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -11,12 +16,11 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.scottbezek.superdiff.R;
-import com.scottbezek.difflib.compute.DiffCatalog;
-import com.scottbezek.difflib.compute.LcsDiff;
-import com.scottbezek.difflib.compute.Region;
-import com.scottbezek.difflib.unified.SideBySideLine;
-import com.scottbezek.util.Assert;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+
+import javax.annotation.concurrent.Immutable;
 
 public class SideBySideLineView extends LinearLayout {
 
@@ -95,13 +99,52 @@ public class SideBySideLineView extends LinearLayout {
         }
 
         if (leftLine != null && rightLine != null) {
-            LcsDiff diffCalc = new LcsDiff();
-            DiffCatalog diff = diffCalc.computeDiff(leftLine, rightLine);
-            for (Region r : diff.getLeftUniqueRegions()) {
-                leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor), r.getStart(), r.getStart() + r.getLength(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-            for (Region r : diff.getRightUniqueRegions()) {
-                rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor), r.getStart(), r.getStart() + r.getLength(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Locale locale = getResources().getConfiguration().locale;
+            final List<String> leftElements = UnicodeUtil.splitNaturalCharacters(leftLine, locale);
+            final List<String> rightElements = UnicodeUtil.splitNaturalCharacters(rightLine, locale);
+            List<EditType> editString = new LevenshteinDiff<String>(leftElements, rightElements)
+                    .setReplaceCost(2f)
+                    .compute()
+                    .getEditString();
+
+            // TODO(sbezek): why not just include the elements in the returned edit string?
+            final Iterator<String> leftIterator = leftElements.iterator();
+            final Iterator<String> rightIterator = rightElements.iterator();
+            int leftCharIndex = 0;
+            int rightCharIndex = 0;
+            for (EditType edit : editString) {
+                if (edit == EditType.DELETE) {
+                    final String leftElement = leftIterator.next();
+                    leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
+                            leftCharIndex, leftCharIndex + leftElement.length(),
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    leftCharIndex += leftElement.length();
+                } else if (edit == EditType.INSERT) {
+                    final String rightElement = rightIterator.next();
+                    rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
+                            rightCharIndex, rightCharIndex + rightElement.length(),
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    rightCharIndex += rightElement.length();
+                } else if (edit == EditType.REPLACE) {
+                    final String leftElement = leftIterator.next();
+                    leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
+                            leftCharIndex, leftCharIndex + leftElement.length(),
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    leftCharIndex += leftElement.length();
+
+                    final String rightElement = rightIterator.next();
+                    rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
+                            rightCharIndex, rightCharIndex + rightElement.length(),
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    rightCharIndex += rightElement.length();
+                } else if (edit == EditType.SAME) {
+                    final String leftElement = leftIterator.next();
+                    leftCharIndex += leftElement.length();
+                    final String rightElement = rightIterator.next();
+                    rightCharIndex += rightElement.length();
+                } else {
+                    throw Assert.fail("Unknown edit type: " + edit);
+                }
             }
         }
 
