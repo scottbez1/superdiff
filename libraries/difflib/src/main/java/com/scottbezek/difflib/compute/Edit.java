@@ -15,5 +15,5 @@ public enum Edit {
     DELETE,
 
     /** Element from the first sequence matches element from the second sequence */
-    SAME,
+    UNCHANGED,
 }

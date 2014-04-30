@@ -20,11 +20,11 @@ public class LevenshteinDiffTest {
 
         List<Edit> expected = Arrays.asList(
                 Edit.REPLACE,
-                Edit.SAME,
-                Edit.SAME,
-                Edit.SAME,
+                Edit.UNCHANGED,
+                Edit.UNCHANGED,
+                Edit.UNCHANGED,
                 Edit.REPLACE,
-                Edit.SAME,
+                Edit.UNCHANGED,
                 Edit.INSERT
                 );
 
@@ -43,11 +43,11 @@ public class LevenshteinDiffTest {
 
         List<Edit> expected = Arrays.asList(
                 Edit.REPLACE,
-                Edit.SAME,
-                Edit.SAME,
-                Edit.SAME,
+                Edit.UNCHANGED,
+                Edit.UNCHANGED,
+                Edit.UNCHANGED,
                 Edit.REPLACE,
-                Edit.SAME,
+                Edit.UNCHANGED,
                 Edit.INSERT
         );
 
@@ -67,12 +67,12 @@ public class LevenshteinDiffTest {
         List<Edit> expected = Arrays.asList(
                 Edit.DELETE,
                 Edit.INSERT,
-                Edit.SAME,
-                Edit.SAME,
-                Edit.SAME,
+                Edit.UNCHANGED,
+                Edit.UNCHANGED,
+                Edit.UNCHANGED,
                 Edit.DELETE,
                 Edit.INSERT,
-                Edit.SAME,
+                Edit.UNCHANGED,
                 Edit.INSERT
         );
 
@@ -136,88 +136,5 @@ public class LevenshteinDiffTest {
             chars.add(c);
         }
         return chars;
-    }
-
-    @Test
-    public void testGetTrimmedElementsSimple() {
-        List<String> first = Arrays.asList("foo", "bar", "ice", "cream", "sandwich");
-        List<String> second = Arrays.asList("foo", "bar", "some", "other", "words", "sandwich");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList("ice", "cream"), result.getFirst());
-        assertEquals(Arrays.asList("some", "other", "words"), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsEmpty() {
-        List<String> first = Collections.emptyList();
-        List<String> second = Collections.emptyList();
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Collections.emptyList(), result.getFirst());
-        assertEquals(Collections.emptyList(), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsFirstOnly() {
-        List<String> first = Arrays.asList("foo", "bar", "ice", "cream", "sandwich");
-        List<String> second = Arrays.asList();
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList("foo", "bar", "ice", "cream", "sandwich"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsSecondOnly() {
-        List<String> first = Arrays.asList();
-        List<String> second = Arrays.asList("foo", "bar", "some", "other", "words", "sandwich");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList(), result.getFirst());
-        assertEquals(Arrays.asList("foo", "bar", "some", "other", "words", "sandwich"), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsBothSingle() {
-        List<String> first = Arrays.asList("foo");
-        List<String> second = Arrays.asList("foo");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList(), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsPrefix() {
-        List<String> first = Arrays.asList("foo", "bar", "ice", "cream", "sandwich");
-        List<String> second = Arrays.asList("foo", "bar");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList("ice", "cream", "sandwich"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsSuffix() {
-        List<String> first = Arrays.asList("foo", "bar", "ice", "cream", "sandwich");
-        List<String> second = Arrays.asList("cream", "sandwich");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList("foo", "bar", "ice"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsDisjoint() {
-        List<String> first = Arrays.asList("foo", "bar", "ice", "cream", "sandwich");
-        List<String> second = Arrays.asList("oops", "woah");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList("foo", "bar", "ice", "cream", "sandwich"), result.getFirst());
-        assertEquals(Arrays.asList("oops", "woah"), result.getSecond());
-    }
-
-    @Test
-    public void testGetTrimmedElementsPrefersPrefix() {
-        List<String> first = Arrays.asList("foo", "bar", "foo", "bar", "testing", "foo", "bar");
-        List<String> second = Arrays.asList("foo", "bar");
-        LevenshteinDiff.ElementPair result = LevenshteinDiff.getTrimmedElements(first, second);
-
-        // "foo" "bar" could be removed as the prefix or suffix of the first list - the prefix should be preferred
-        assertEquals(Arrays.asList("foo", "bar", "testing", "foo", "bar"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
     }
 }

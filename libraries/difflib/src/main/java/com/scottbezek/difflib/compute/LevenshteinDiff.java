@@ -1,11 +1,8 @@
 package com.scottbezek.difflib.compute;
 
-import com.scottbezek.util.Assert;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * Diff algorithm that computes an edit string of minimal Levenshtein cost which transforms one
@@ -98,7 +95,7 @@ public class LevenshteinDiff<Element> {
                 final Edit replaceType;
                 if (mFirst.get(i - 1).equals(mSecond.get(j - 1))) {
                     replaceCost = mCostTable[i - 1][j - 1] + 0f;
-                    replaceType = Edit.SAME;
+                    replaceType = Edit.UNCHANGED;
                 } else {
                     replaceCost = mCostTable[i - 1][j - 1] + mReplaceCost;
                     replaceType = Edit.REPLACE;
@@ -148,8 +145,11 @@ public class LevenshteinDiff<Element> {
                 case DELETE:
                     i--;
                     break;
-                case REPLACE: // intentional fall-through
-                case SAME:
+                case REPLACE:
+                    i--;
+                    j--;
+                    break;
+                case UNCHANGED:
                     i--;
                     j--;
                     break;
@@ -190,75 +190,4 @@ public class LevenshteinDiff<Element> {
         }
         return sb.toString();
     }
-
-    /**
-     * Takes 2 lists of elements and returns 2 new lists with the shared prefix and/or
-     * suffix removed. The input lists are not modified.
-     */
-    static <Element> ElementPair<Element> getTrimmedElements(List<Element> first,
-            List<Element> second) {
-        final ListIterator<Element> firstIterator = first.listIterator();
-        final ListIterator<Element> secondIterator = second.listIterator();
-
-        // Move both iterators forward until the elements don't match or the end
-        // of either string is reached.
-        while (firstIterator.hasNext() && secondIterator.hasNext()) {
-            if (!firstIterator.next().equals(secondIterator.next())) {
-                firstIterator.previous();
-                secondIterator.previous();
-                break;
-            }
-        }
-
-        final ListIterator<Element> firstBackwardIterator = first.listIterator(first.size());
-        final ListIterator<Element> secondBackwardIterator = second.listIterator(second.size());
-        while (firstBackwardIterator.hasPrevious()
-                && secondBackwardIterator.hasPrevious()
-                && firstBackwardIterator.previousIndex() >= firstIterator.nextIndex()
-                && secondBackwardIterator.previousIndex() >= secondIterator.nextIndex()) {
-            if (!firstBackwardIterator.previous().equals(secondBackwardIterator.previous())) {
-                firstBackwardIterator.next();
-                secondBackwardIterator.next();
-                break;
-            }
-        }
-
-        final List<Element> firstTrimmed = new ArrayList<Element>();
-        while (firstIterator.hasNext()
-                && firstIterator.nextIndex() <= firstBackwardIterator.previousIndex()) {
-            firstTrimmed.add(firstIterator.next());
-        }
-
-        final List<Element> secondTrimmed = new ArrayList<Element>();
-        while (secondIterator.hasNext()
-                && secondIterator.nextIndex() <= secondBackwardIterator.previousIndex()) {
-            secondTrimmed.add(secondIterator.next());
-        }
-
-        // Same number of elements should have been trimmed from each
-        Assert.isTrue(
-                (first.size() - firstTrimmed.size()) == (second.size() - secondTrimmed.size()));
-        return new ElementPair<Element>(firstTrimmed, secondTrimmed);
-    }
-
-    static class ElementPair<Element> {
-
-        private final List<Element> mFirst;
-
-        private final List<Element> mSecond;
-
-        public ElementPair(List<Element> first, List<Element> second) {
-            mFirst = first;
-            mSecond = second;
-        }
-
-        public List<Element> getFirst() {
-            return mFirst;
-        }
-
-        public List<Element> getSecond() {
-            return mSecond;
-        }
-    }
-
 }

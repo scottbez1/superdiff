@@ -1,6 +1,7 @@
 package com.scottbezek.superdiff.list;
 
 import com.scottbezek.difflib.UnicodeUtil;
+import com.scottbezek.difflib.compute.DiffComputeUtil;
 import com.scottbezek.difflib.compute.LevenshteinDiff;
 import com.scottbezek.difflib.compute.Edit;
 import com.scottbezek.difflib.unified.SideBySideLine;
@@ -99,6 +100,7 @@ public class SideBySideLineView extends LinearLayout {
         }
 
         if (leftLine != null && rightLine != null) {
+            // TODO(sbezek): this should probably be pre-computed, rather than run on the UI thread
             Locale locale = getResources().getConfiguration().locale;
             final List<String> leftElements = UnicodeUtil.splitNaturalCharacters(leftLine, locale);
             final List<String> rightElements = UnicodeUtil.splitNaturalCharacters(rightLine, locale);
@@ -106,6 +108,7 @@ public class SideBySideLineView extends LinearLayout {
                     .setReplaceCost(2f)
                     .compute()
                     .getEditString();
+            DiffComputeUtil.removeSmallUnchangedRegions(editString);
 
             // TODO(sbezek): why not just include the elements in the returned edit string?
             final Iterator<String> leftIterator = leftElements.iterator();
@@ -137,7 +140,7 @@ public class SideBySideLineView extends LinearLayout {
                             rightCharIndex, rightCharIndex + rightElement.length(),
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     rightCharIndex += rightElement.length();
-                } else if (edit == Edit.SAME) {
+                } else if (edit == Edit.UNCHANGED) {
                     final String leftElement = leftIterator.next();
                     leftCharIndex += leftElement.length();
                     final String rightElement = rightIterator.next();
@@ -146,6 +149,12 @@ public class SideBySideLineView extends LinearLayout {
                     throw Assert.fail("Unknown edit type: " + edit);
                 }
             }
+        } else if (leftLine == null && rightLine != null) {
+            rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
+                    0, rightLine.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } else if (leftLine != null && rightLine == null) {
+            leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
+                    0, leftLine.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
         if (leftLine != null) {
