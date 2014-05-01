@@ -114,8 +114,8 @@ public class DiffComputeUtilTest {
         List<String> first = Collections.emptyList();
         List<String> second = Collections.emptyList();
         ElementListPair<String> result = DiffComputeUtil.getTrimmedElements(first, second);
-        assertEquals(Collections.emptyList(), result.getFirst());
-        assertEquals(Collections.emptyList(), result.getSecond());
+        assertEquals(Collections.<String>emptyList(), result.getFirst());
+        assertEquals(Collections.<String>emptyList(), result.getSecond());
     }
 
     @Test
@@ -124,7 +124,7 @@ public class DiffComputeUtilTest {
         List<String> second = Arrays.asList();
         ElementListPair<String> result = DiffComputeUtil.getTrimmedElements(first, second);
         assertEquals(Arrays.asList("foo", "bar", "ice", "cream", "sandwich"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
+        assertEquals(Arrays.<String>asList(), result.getSecond());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class DiffComputeUtilTest {
         List<String> first = Arrays.asList();
         List<String> second = Arrays.asList("foo", "bar", "some", "other", "words", "sandwich");
         ElementListPair<String> result = DiffComputeUtil.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList(), result.getFirst());
+        assertEquals(Arrays.<String>asList(), result.getFirst());
         assertEquals(Arrays.asList("foo", "bar", "some", "other", "words", "sandwich"), result.getSecond());
     }
 
@@ -141,8 +141,8 @@ public class DiffComputeUtilTest {
         List<String> first = Arrays.asList("foo");
         List<String> second = Arrays.asList("foo");
         ElementListPair<String> result = DiffComputeUtil.getTrimmedElements(first, second);
-        assertEquals(Arrays.asList(), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
+        assertEquals(Arrays.<String>asList(), result.getFirst());
+        assertEquals(Arrays.<String>asList(), result.getSecond());
     }
 
     @Test
@@ -151,7 +151,7 @@ public class DiffComputeUtilTest {
         List<String> second = Arrays.asList("foo", "bar");
         ElementListPair<String> result = DiffComputeUtil.getTrimmedElements(first, second);
         assertEquals(Arrays.asList("ice", "cream", "sandwich"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
+        assertEquals(Arrays.<String>asList(), result.getSecond());
     }
 
     @Test
@@ -160,7 +160,7 @@ public class DiffComputeUtilTest {
         List<String> second = Arrays.asList("cream", "sandwich");
         ElementListPair<String> result = DiffComputeUtil.getTrimmedElements(first, second);
         assertEquals(Arrays.asList("foo", "bar", "ice"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
+        assertEquals(Arrays.<String>asList(), result.getSecond());
     }
 
     @Test
@@ -180,6 +180,6 @@ public class DiffComputeUtilTest {
 
         // "foo" "bar" could be removed as the prefix or suffix of the first list - the prefix should be preferred
         assertEquals(Arrays.asList("foo", "bar", "testing", "foo", "bar"), result.getFirst());
-        assertEquals(Arrays.asList(), result.getSecond());
+        assertEquals(Arrays.<String>asList(), result.getSecond());
     }
 }

@@ -1,14 +1,18 @@
 package com.scottbezek.superdiff;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Scanner;
+import com.scottbezek.difflib.unified.Chunk;
+import com.scottbezek.difflib.unified.Parser;
+import com.scottbezek.difflib.unified.Parser.DiffParseException;
+import com.scottbezek.difflib.unified.SideBySideLine;
+import com.scottbezek.difflib.unified.SingleFileDiff;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
+import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedUnknown;
+import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
+import com.scottbezek.superdiff.list.MultiFileDiffAdapter;
+import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
+import com.scottbezek.util.Assert;
+import com.scottbezek.util.StopWatch;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -21,19 +25,15 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
 
-import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter;
-import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedOrLine;
-import com.scottbezek.superdiff.list.CollapsedSideBySideLineAdapter.CollapsedUnknown;
-import com.scottbezek.superdiff.list.HorizontalScrollObservingListView;
-import com.scottbezek.superdiff.list.MultiFileDiffAdapter;
-import com.scottbezek.superdiff.list.SideBySideLineView.ItemWidths;
-import com.scottbezek.difflib.unified.Chunk;
-import com.scottbezek.difflib.unified.Parser;
-import com.scottbezek.difflib.unified.Parser.DiffParseException;
-import com.scottbezek.difflib.unified.SideBySideLine;
-import com.scottbezek.difflib.unified.SingleFileDiff;
-import com.scottbezek.util.Assert;
-import com.scottbezek.util.StopWatch;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Scanner;
 
 public class ListViewActivity extends Activity {
 

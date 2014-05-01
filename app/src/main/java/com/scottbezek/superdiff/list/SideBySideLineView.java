@@ -149,10 +149,10 @@ public class SideBySideLineView extends LinearLayout {
                     throw Assert.fail("Unknown edit type: " + edit);
                 }
             }
-        } else if (leftLine == null && rightLine != null) {
+        } else if (leftLine == null) {
             rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
                     0, rightLine.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else if (leftLine != null && rightLine == null) {
+        } else if (rightLine == null) {
             leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
                     0, leftLine.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
