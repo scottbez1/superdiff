@@ -9,9 +9,13 @@ public class AndroidAssert {
 
     private AndroidAssert() {}
 
-    public static void mainThreadOnly() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            throw new AssertionError("Must be called on the UI thread");
+    public static void assertSameLooper(Looper expectedLooper) {
+        if (Looper.myLooper() != expectedLooper) {
+            throw new AssertionError("Not called on required Looper: " + expectedLooper);
         }
+    }
+
+    public static void mainThread() {
+        assertSameLooper(Looper.getMainLooper());
     }
 }

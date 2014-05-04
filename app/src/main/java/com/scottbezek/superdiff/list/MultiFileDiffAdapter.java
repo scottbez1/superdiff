@@ -1,12 +1,12 @@
 package com.scottbezek.superdiff.list;
 
-import java.util.List;
+import com.scottbezek.util.Assert;
 
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-import com.scottbezek.util.Assert;
+import java.util.List;
 
 /**
  * A fairly naive multiplexing adapter, made up of any number of

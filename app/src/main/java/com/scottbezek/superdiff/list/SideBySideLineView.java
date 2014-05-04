@@ -78,11 +78,11 @@ public class SideBySideLineView extends LinearLayout {
             }
         } else if ((leftLine == null) ^ (rightLine == null)){
             if (leftLine != null) {
-                leftBackgroundColor = mRemovedBackgroundColor;
+                leftBackgroundColor = mRemovedCharactersBackgroundColor;
                 rightBackgroundColor = mEmptyBackgroundColor;
             } else {
                 leftBackgroundColor = mEmptyBackgroundColor;
-                rightBackgroundColor = mAddedBackgroundColor;
+                rightBackgroundColor = mAddedCharactersBackgroundColor;
             }
         } else {
             throw Assert.fail("diff line has neither left nor right");
@@ -149,12 +149,6 @@ public class SideBySideLineView extends LinearLayout {
                     throw Assert.fail("Unknown edit type: " + edit);
                 }
             }
-        } else if (leftLine == null) {
-            rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
-                    0, rightLine.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else if (rightLine == null) {
-            leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
-                    0, leftLine.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
         if (leftLine != null) {
