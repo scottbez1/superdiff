@@ -11,6 +11,7 @@ import com.scottbezek.superdiff.manager.DiffManager.DiffFailed;
 import com.scottbezek.superdiff.manager.DiffManager.DiffLoadResult;
 import com.scottbezek.superdiff.manager.DiffManager.DiffLoading;
 import com.scottbezek.superdiff.manager.DiffManager.DiffStatus;
+import com.scottbezek.superdiff.manager.IntralineDiffProcessor;
 import com.scottbezek.superdiff.manager.StateStream;
 import com.scottbezek.superdiff.manager.StateStream.Listener;
 import com.scottbezek.util.Assert;
@@ -90,18 +91,31 @@ public class ListViewActivity extends Activity {
             finish();
             return;
         } else {
+            final IntralineDiffProcessor intralineDiffProcessor
+                    = intralineDiffProcessorFromResources(getResources());
             if (dataUri != null) {
-                mResultStream = mDiffManager.loadContentUri(getContentResolver(), dataUri);
+                mResultStream = mDiffManager
+                        .loadContentUri(getContentResolver(), dataUri, intralineDiffProcessor);
             } else {
                 String sampleName = intent.getStringExtra(EXTRA_SAMPLE);
                 if (sampleName.contains("..")) {
                     finish();
                     return;
                 }
-                mResultStream = mDiffManager.loadSample(getAssets(), sampleName);
+                mResultStream = mDiffManager
+                        .loadSample(getAssets(), sampleName, intralineDiffProcessor);
             }
             mResultStream.subscribeInvoke(mDiffListener);
         }
+    }
+
+    private static IntralineDiffProcessor intralineDiffProcessorFromResources(Resources resources) {
+        int addedCharactersBackgroundColor = resources
+                .getColor(R.color.diff_chars_added_background);
+        int removedCharactersBackgroundColor = resources
+                .getColor(R.color.diff_chars_removed_background);
+        return new IntralineDiffProcessor(resources.getConfiguration().locale,
+                removedCharactersBackgroundColor, addedCharactersBackgroundColor);
     }
 
     private final Listener mDiffListener = new Listener<DiffStatus>() {
@@ -111,8 +125,9 @@ public class ListViewActivity extends Activity {
                 mListView.setVisibility(View.GONE);
                 mProgress.setVisibility(View.VISIBLE);
             } else if (state instanceof DiffFailed) {
+                mProgress.setVisibility(View.GONE);
                 DiffFailed failure = (DiffFailed)state;
-                Toast.makeText(ListViewActivity.this, failure.getCause().getMessage(), Toast.LENGTH_LONG);
+                Toast.makeText(ListViewActivity.this, failure.getCause().getMessage(), Toast.LENGTH_LONG).show();
             } else if (state instanceof DiffLoadResult) {
                 Map<String, List<CollapsedOrLine>> diffByFilename = ((DiffLoadResult)state).getDiffByFilename();
 
@@ -163,13 +178,13 @@ public class ListViewActivity extends Activity {
                 continue;
             } else {
                 SideBySideLine line = item.getLine();
-                final String leftLine = line.getLeftLine();
+                final CharSequence leftLine = line.getLeftLine();
                 if (leftLine != null) {
                     widestLineNumberChars = Math.max(widestLineNumberChars,
                             String.valueOf(line.getLeftLineNumber()).length());
                     widestContentsChars = Math.max(widestContentsChars, leftLine.length());
                 }
-                final String rightLine = line.getRightLine();
+                final CharSequence rightLine = line.getRightLine();
                 if (rightLine != null) {
                     widestLineNumberChars = Math.max(widestLineNumberChars,
                             String.valueOf(line.getRightLineNumber()).length());

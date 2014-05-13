@@ -26,10 +26,13 @@ public class DiffLoadTask implements Runnable {
 
     private final StateStream<DiffStatus> mOutput;
     private final InputStream mInput;
+    private final IntralineDiffProcessor mIntralineDiffProcessor;
 
-    public DiffLoadTask(InputStream input, StateStream output) {
+    public DiffLoadTask(InputStream input, StateStream output, IntralineDiffProcessor
+            intralineDiffProcessor) {
         mInput = input;
         mOutput = output;
+        mIntralineDiffProcessor = intralineDiffProcessor;
     }
 
     @Override
@@ -48,7 +51,7 @@ public class DiffLoadTask implements Runnable {
     }
 
 
-    private static Map<String, List<CollapsedOrLine>> getCollapsedDiffs(
+    private Map<String, List<CollapsedOrLine>> getCollapsedDiffs(
             Scanner unifiedDiffFileContents) throws DiffParseException {
         final Map<String, List<CollapsedOrLine>> collapsedDiffByFilename =
                 new HashMap<String, List<CollapsedOrLine>>();
@@ -65,8 +68,9 @@ public class DiffLoadTask implements Runnable {
                     items.add(CollapsedOrLine.of(new CollapsedUnknown(leftStartLine - curLeftLine)));
                 }
                 for (SideBySideLine line : chunk.getLines()) {
-                    items.add(CollapsedOrLine.of(line));
-                    if (line.getLeftLine() != null) {
+                    SideBySideLine processed = mIntralineDiffProcessor.computeIntralineDiff(line);
+                    items.add(CollapsedOrLine.of(processed));
+                    if (processed.getLeftLine() != null) {
                         curLeftLine++;
                     }
                 }

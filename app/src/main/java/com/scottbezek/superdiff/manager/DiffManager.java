@@ -124,11 +124,12 @@ public class DiffManager {
      * @return A {@link com.scottbezek.superdiff.manager.StateStream} which will be updated as the
      * diff is loaded.
      */
-    public StateStream<DiffStatus> loadSample(AssetManager assets, String sampleName) {
+    public StateStream<DiffStatus> loadSample(AssetManager assets, String sampleName,
+            IntralineDiffProcessor intralineDiffProcessor) {
         StateStream<DiffStatus> state = new StateStream<DiffStatus>(new DiffLoading());
         // TODO(sbezek): do some caching?
 
-        mExecutor.execute(new SampleLoader(assets, sampleName, state));
+        mExecutor.execute(new SampleLoader(assets, sampleName, state, intralineDiffProcessor));
         return state;
     }
 
@@ -140,11 +141,13 @@ public class DiffManager {
      * @return A {@link com.scottbezek.superdiff.manager.StateStream} which will be updated as the
      * diff is loaded.
      */
-    public StateStream<DiffStatus> loadContentUri(ContentResolver contentResolver, Uri dataUri) {
+    public StateStream<DiffStatus> loadContentUri(ContentResolver contentResolver, Uri dataUri,
+            IntralineDiffProcessor intralineDiffProcessor) {
         StateStream<DiffStatus> state = new StateStream<DiffStatus>(new DiffLoading());
         // TODO(sbezek): do some caching?
 
-        mExecutor.execute(new ContentLoader(contentResolver, dataUri, state));
+        mExecutor.execute(
+                new ContentLoader(contentResolver, dataUri, state, intralineDiffProcessor));
         return state;
     }
 
@@ -159,14 +162,17 @@ public class DiffManager {
 
         private final StateStream<DiffStatus> mOutput;
 
+        private final IntralineDiffProcessor mIntralineDiffProcessor;
+
         public SampleLoader(AssetManager assets, String sampleName,
-                StateStream<DiffStatus> output) {
+                StateStream<DiffStatus> output, IntralineDiffProcessor intralineDiffProcessor) {
             if (sampleName.contains("..")) {
                 throw new IllegalStateException("Path cannot contain '..'");
             }
             mAssets = assets;
             mSampleName = sampleName;
             mOutput = output;
+            mIntralineDiffProcessor = intralineDiffProcessor;
         }
 
         @Override
@@ -178,7 +184,7 @@ public class DiffManager {
                 mOutput.update(new DiffFailed(e));
                 return;
             }
-            DiffLoadTask loadTask = new DiffLoadTask(diffInput, mOutput);
+            DiffLoadTask loadTask = new DiffLoadTask(diffInput, mOutput, mIntralineDiffProcessor);
             loadTask.run();
         }
     }
@@ -195,11 +201,14 @@ public class DiffManager {
 
         private final StateStream<DiffStatus> mOutput;
 
+        private final IntralineDiffProcessor mIntralineDiffProcessor;
+
         public ContentLoader(ContentResolver contentResolver, Uri dataUri,
-                StateStream<DiffStatus> output) {
+                StateStream<DiffStatus> output, IntralineDiffProcessor intralineDiffProcessor) {
             mContentResolver = contentResolver;
             mDataUri = dataUri;
             mOutput = output;
+            mIntralineDiffProcessor = intralineDiffProcessor;
         }
 
         @Override
@@ -211,7 +220,7 @@ public class DiffManager {
                 mOutput.update(new DiffFailed(e));
                 return;
             }
-            DiffLoadTask loadTask = new DiffLoadTask(diffInput, mOutput);
+            DiffLoadTask loadTask = new DiffLoadTask(diffInput, mOutput, mIntralineDiffProcessor);
             loadTask.run();
         }
     }

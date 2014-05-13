@@ -1,25 +1,14 @@
 package com.scottbezek.superdiff.list;
 
-import com.scottbezek.difflib.UnicodeUtil;
-import com.scottbezek.difflib.compute.DiffComputeUtil;
-import com.scottbezek.difflib.compute.LevenshteinDiff;
-import com.scottbezek.difflib.compute.Edit;
 import com.scottbezek.difflib.unified.SideBySideLine;
 import com.scottbezek.superdiff.R;
 import com.scottbezek.util.Assert;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.BackgroundColorSpan;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -63,8 +52,8 @@ public class SideBySideLineView extends LinearLayout {
     }
 
     public void setLine(SideBySideLine line) {
-        String leftLine = line.getLeftLine();
-        String rightLine = line.getRightLine();
+        CharSequence leftLine = line.getLeftLine();
+        CharSequence rightLine = line.getRightLine();
 
         final int leftBackgroundColor;
         final int rightBackgroundColor;
@@ -90,70 +79,9 @@ public class SideBySideLineView extends LinearLayout {
         mLeftContents.setBackgroundColor(leftBackgroundColor);
         mRightContents.setBackgroundColor(rightBackgroundColor);
 
-        Spannable leftSpan = null;
-        Spannable rightSpan = null;
-        if (leftLine != null) {
-            leftSpan = new SpannableString(leftLine);
-        }
-        if (rightLine != null) {
-            rightSpan = new SpannableString(rightLine);
-        }
-
-        if (leftLine != null && rightLine != null) {
-            // TODO(sbezek): this should probably be pre-computed, rather than run on the UI thread
-            Locale locale = getResources().getConfiguration().locale;
-            final List<String> leftElements = UnicodeUtil.splitNaturalCharacters(leftLine, locale);
-            final List<String> rightElements = UnicodeUtil.splitNaturalCharacters(rightLine, locale);
-            List<Edit> editString = new LevenshteinDiff<String>(leftElements, rightElements)
-                    .setReplaceCost(2f)
-                    .compute()
-                    .getEditString();
-            DiffComputeUtil.removeSmallUnchangedRegions(editString);
-
-            // TODO(sbezek): why not just include the elements in the returned edit string?
-            final Iterator<String> leftIterator = leftElements.iterator();
-            final Iterator<String> rightIterator = rightElements.iterator();
-            int leftCharIndex = 0;
-            int rightCharIndex = 0;
-            for (Edit edit : editString) {
-                if (edit == Edit.DELETE) {
-                    final String leftElement = leftIterator.next();
-                    leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
-                            leftCharIndex, leftCharIndex + leftElement.length(),
-                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    leftCharIndex += leftElement.length();
-                } else if (edit == Edit.INSERT) {
-                    final String rightElement = rightIterator.next();
-                    rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
-                            rightCharIndex, rightCharIndex + rightElement.length(),
-                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    rightCharIndex += rightElement.length();
-                } else if (edit == Edit.REPLACE) {
-                    final String leftElement = leftIterator.next();
-                    leftSpan.setSpan(new BackgroundColorSpan(mRemovedCharactersBackgroundColor),
-                            leftCharIndex, leftCharIndex + leftElement.length(),
-                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    leftCharIndex += leftElement.length();
-
-                    final String rightElement = rightIterator.next();
-                    rightSpan.setSpan(new BackgroundColorSpan(mAddedCharactersBackgroundColor),
-                            rightCharIndex, rightCharIndex + rightElement.length(),
-                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    rightCharIndex += rightElement.length();
-                } else if (edit == Edit.UNCHANGED) {
-                    final String leftElement = leftIterator.next();
-                    leftCharIndex += leftElement.length();
-                    final String rightElement = rightIterator.next();
-                    rightCharIndex += rightElement.length();
-                } else {
-                    throw Assert.fail("Unknown edit type: " + edit);
-                }
-            }
-        }
-
         if (leftLine != null) {
             mLeftLineNumber.setText(String.valueOf(line.getLeftLineNumber()));
-            mLeftContents.setText(leftSpan);
+            mLeftContents.setText(leftLine);
         } else {
             mLeftLineNumber.setText("");
             mLeftContents.setText("");
@@ -161,7 +89,7 @@ public class SideBySideLineView extends LinearLayout {
 
         if (rightLine != null) {
             mRightLineNumber.setText(String.valueOf(line.getRightLineNumber()));
-            mRightContents.setText(rightSpan);
+            mRightContents.setText(rightLine);
         } else {
             mRightLineNumber.setText("");
             mRightContents.setText("");

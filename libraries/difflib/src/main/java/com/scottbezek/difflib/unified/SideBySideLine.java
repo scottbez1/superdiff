@@ -10,12 +10,12 @@ import javax.annotation.concurrent.Immutable;
 public class SideBySideLine {
 
     private final int mLeftLineNumber;
-    private final String mLeftLine;
+    private final CharSequence mLeftLine;
     private final int mRightLineNumber;
-    private final String mRightLine;
+    private final CharSequence mRightLine;
 
-    public SideBySideLine(int leftLineNumber, @CheckForNull String leftLine,
-            int rightLineNumber, @CheckForNull String rightLine) {
+    public SideBySideLine(int leftLineNumber, @CheckForNull CharSequence leftLine,
+            int rightLineNumber, @CheckForNull CharSequence rightLine) {
         mLeftLineNumber = leftLineNumber;
         mLeftLine = leftLine;
         mRightLineNumber = rightLineNumber;
@@ -27,7 +27,7 @@ public class SideBySideLine {
     }
 
     @CheckForNull
-    public String getLeftLine() {
+    public CharSequence getLeftLine() {
         return mLeftLine;
     }
 
@@ -36,7 +36,7 @@ public class SideBySideLine {
     }
 
     @CheckForNull
-    public String getRightLine() {
+    public CharSequence getRightLine() {
         return mRightLine;
     }
 
