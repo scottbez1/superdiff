@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">SuperDiff</string>
-    <string name="title_activity_list_view">ListViewActivity</string>
+    <string name="app_name">Superdiff</string>
+    <string name="title_activity_list_view">Superdiff</string>
 
     <plurals name="collapsed_lines">
         <item quantity="one">%d line</item>
         <item quantity="other">%d lines</item>
     </plurals>
 
-    <string name="title_activity_dummy_main">DummyMainActivity</string>
+    <string name="title_activity_dummy_main">Superdiff Demo</string>
     <string name="view_sample">View sample!</string>
 
 </resources>
