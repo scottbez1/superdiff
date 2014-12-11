@@ -14,15 +14,48 @@
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
-                
                 <category android:name="android.intent.category.DEFAULT" />
-                
+
                 <data android:scheme="content" />
                 <data android:scheme="file" />
                 <data android:mimeType="text/x-diff" />
                 <data android:mimeType="text/x-patch" />
                 <data android:mimeType="application/x-patch" />
             </intent-filter>
+
+            <!-- Also filter based on file extension in case an app sets a more generic mime-type
+                 (e.g. application/octet-stream) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+
+                <data android:mimeType="text/x-diff" />
+                <data android:mimeType="text/x-patch" />
+                <data android:mimeType="application/x-patch" />
+                <data android:mimeType="application/octet-stream" />
+
+                <data android:host="*" />
+
+                <!-- The pattern matcher implementation is not greedy, so specify several possible
+                     patterns in cas the path includes multiple "."s in it, other than the one that
+                     denotes the file extension -->
+                <data android:pathPattern=".*\\.diff" />
+                <data android:pathPattern=".*\\..*\\.diff" />
+                <data android:pathPattern=".*\\..*\\..*\\.diff" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.diff" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.diff" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.diff" />
+                <data android:pathPattern=".*\\.patch" />
+                <data android:pathPattern=".*\\..*\\.patch" />
+                <data android:pathPattern=".*\\..*\\..*\\.patch" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.patch" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.patch" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.patch" />
+            </intent-filter>
+
         </activity>
         <activity
             android:name="com.scottbezek.superdiff.DummyMainActivity"
